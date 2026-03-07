@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/draw_provider.dart';
+import '../../providers/settings_provider.dart';
 
 /// Provider to track tab switching for navigation after "Add to Game"
 final navigateToHomeProvider = StateProvider<bool>((ref) => false);
@@ -58,6 +59,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen>
   }
 
   void _showResetDialog() {
+    final colors = AppColors.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -74,7 +76,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen>
               Navigator.pop(context);
               ref.read(drawProvider.notifier).reset();
             },
-            child: Text('Reset', style: TextStyle(color: AppColors.danger)),
+            child: Text('Reset', style: TextStyle(color: colors.danger)),
           ),
         ],
       ),
@@ -113,6 +115,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen>
   @override
   Widget build(BuildContext context) {
     final drawData = ref.watch(drawProvider);
+    final colors = ref.watch(appColorsProvider);
     final canAddName = drawData.candidateNames.length < 12 &&
         drawData.drawState != DrawState.drawing &&
         drawData.drawState != DrawState.complete;
@@ -123,15 +126,15 @@ class _DrawScreenState extends ConsumerState<DrawScreen>
         drawData.drawnNames.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       appBar: AppBar(
-        backgroundColor: AppColors.navbar,
+        backgroundColor: colors.navbar,
         centerTitle: true,
         title: Text(
           'Name Draw',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: colors.textPrimary,
           ),
         ),
         actions: [
@@ -140,7 +143,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen>
               onPressed: _showResetDialog,
               icon: Icon(
                 Icons.refresh,
-                color: AppColors.danger,
+                color: colors.danger,
                 size: 22,
               ),
             ),
@@ -235,6 +238,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Row(
       children: [
         Container(
@@ -252,7 +256,7 @@ class _SectionHeader extends StatelessWidget {
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
-            color: AppColors.textSecondary,
+            color: colors.textSecondary,
           ),
         ),
       ],
@@ -284,12 +288,13 @@ class _AddNameRowState extends State<_AddNameRow> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Row(
       children: [
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.bgCard,
+              color: colors.bgCard,
               borderRadius: BorderRadius.circular(12),
             ),
             child: TextField(
@@ -302,19 +307,19 @@ class _AddNameRowState extends State<_AddNameRow> {
                     color: AppColors.primary, size: 20),
                 suffixIcon: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: widget.controller,
-                  builder: (_, val, __) => val.text.isEmpty
+                  builder: (_, val, _) => val.text.isEmpty
                       ? const SizedBox.shrink()
                       : GestureDetector(
                           onTap: () => widget.controller.clear(),
                           child: Icon(Icons.cancel,
-                              size: 18, color: AppColors.textMuted),
+                              size: 18, color: colors.textMuted),
                         ),
                 ),
                 border: InputBorder.none,
                 hintStyle:
-                    TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                    TextStyle(color: colors.textSecondary, fontSize: 15),
               ),
-              style: TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: colors.textPrimary),
               onSubmitted: (_) => widget.onAdd(),
               enabled: widget.canAdd,
             ),
@@ -339,7 +344,7 @@ class _AddNameRowState extends State<_AddNameRow> {
                 gradient: widget.canAdd
                     ? AppColors.primaryGradient
                     : null,
-                color: widget.canAdd ? null : AppColors.textMuted,
+                color: widget.canAdd ? null : colors.textMuted,
               ),
               child: const Icon(Icons.add, color: Colors.white, size: 22),
             ),
@@ -367,6 +372,7 @@ class _CandidateChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -374,10 +380,10 @@ class _CandidateChips extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.bgCard,
+            color: colors.bgCard,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: const AppColors().cardShadow,
+            border: Border.all(color: colors.border, width: 1),
+            boxShadow: colors.cardShadow,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -387,7 +393,7 @@ class _CandidateChips extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
               if (canRemove) ...[
@@ -397,7 +403,7 @@ class _CandidateChips extends StatelessWidget {
                   child: Icon(
                     Icons.cancel,
                     size: 18,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                   ),
                 ),
               ],
@@ -418,6 +424,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
       child: Column(
@@ -443,7 +450,7 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
@@ -451,7 +458,7 @@ class _EmptyState extends StatelessWidget {
             'to start a random draw',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: colors.textSecondary,
             ),
           ),
         ],
@@ -475,6 +482,7 @@ class _RevealCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final hasDrawn = drawData.lastDrawnName != null;
     final position = drawData.drawnNames.length;
 
@@ -489,9 +497,9 @@ class _RevealCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
         decoration: BoxDecoration(
-          gradient: AppColors.cardGradient,
+          gradient: colors.cardGradient,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: const AppColors().cardShadow,
+          boxShadow: colors.cardShadow,
         ),
         child: hasDrawn
             ? Column(
@@ -525,7 +533,7 @@ class _RevealCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 42,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -541,7 +549,7 @@ class _RevealCard extends StatelessWidget {
                   Icon(
                     Icons.shuffle,
                     size: 40,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -549,7 +557,7 @@ class _RevealCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textSecondary,
+                      color: colors.textSecondary,
                       fontStyle: FontStyle.italic,
                       height: 1.4,
                     ),
@@ -585,6 +593,7 @@ class _DrawButtonState extends State<_DrawButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTapDown: (_) {
         if (widget.canDraw) setState(() => _scale = 0.95);
@@ -605,7 +614,7 @@ class _DrawButtonState extends State<_DrawButton> {
                 : null,
             color: widget.canDraw
                 ? null
-                : AppColors.textMuted.withValues(alpha: 0.4),
+                : colors.textMuted.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(14),
             boxShadow: widget.canDraw
                 ? [
@@ -681,6 +690,7 @@ class _AddToGameButtonState extends State<_AddToGameButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTapDown: (_) => setState(() => _scale = 0.95),
       onTapUp: (_) {
@@ -694,11 +704,11 @@ class _AddToGameButtonState extends State<_AddToGameButton> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: AppColors.success,
+            color: colors.success,
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: AppColors.success.withValues(alpha: 0.35),
+                color: colors.success.withValues(alpha: 0.35),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -748,6 +758,7 @@ class _DrawnOrderList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Column(
       children: List.generate(names.length, (index) {
         return TweenAnimationBuilder<double>(
@@ -763,12 +774,12 @@ class _DrawnOrderList extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: AppColors.bgCard,
+              color: colors.bgCard,
               borderRadius: BorderRadius.circular(12),
               border: Border(
                 left: BorderSide(color: AppColors.warning, width: 4),
               ),
-              boxShadow: const AppColors().cardShadow,
+              boxShadow: colors.cardShadow,
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -804,7 +815,7 @@ class _DrawnOrderList extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                       ),
                     ),
                   ),

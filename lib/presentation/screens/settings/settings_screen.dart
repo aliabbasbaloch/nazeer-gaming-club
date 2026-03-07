@@ -17,15 +17,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    final colors = ref.watch(appColorsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       appBar: AppBar(
-        backgroundColor: AppColors.navbar,
+        backgroundColor: colors.navbar,
         centerTitle: true,
         title: Text('Settings',
             style: TextStyle(
-                fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                fontWeight: FontWeight.bold, color: colors.textPrimary)),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -34,6 +35,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             // ── Developer card ────────────────────────────────────────────
             const _DeveloperCard(),
+            const SizedBox(height: 20),
+
+            // ── Appearance ───────────────────────────────────────────────
+            const _SectionHeader(title: 'Appearance'),
+            _SettingsGroup(
+              children: [
+                _SettingsRow(
+                  icon: Icons.dark_mode,
+                  title: 'Dark Mode',
+                  trailing: Switch(
+                    value: settings.isDarkMode,
+                    onChanged: (_) =>
+                        ref.read(settingsProvider.notifier).toggleDarkMode(),
+                    activeThumbColor: AppColors.primary,
+                  ),
+                  onTap: () =>
+                      ref.read(settingsProvider.notifier).toggleDarkMode(),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
 
             // ── Game ─────────────────────────────────────────────────────
@@ -48,7 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     turns: _showTargetSelector ? 0.25 : 0.0,
                     duration: const Duration(milliseconds: 200),
                     child: Icon(Icons.chevron_right,
-                        color: AppColors.textSecondary, size: 20),
+                        color: colors.textSecondary, size: 20),
                   ),
                   onTap: () => setState(
                       () => _showTargetSelector = !_showTargetSelector),
@@ -75,7 +96,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.info_outline,
                   title: 'About App',
                   trailing: Icon(Icons.chevron_right,
-                      color: AppColors.textSecondary, size: 20),
+                      color: colors.textSecondary, size: 20),
                   onTap: () => _showAboutAppDialog(context),
                 ),
                 const _Divider(),
@@ -195,6 +216,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 16, 6),
       child: Text(
@@ -203,7 +225,7 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
-          color: AppColors.textSecondary,
+          color: colors.textSecondary,
         ),
       ),
     );
@@ -220,12 +242,13 @@ class _SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const AppColors().cardShadow,
+        boxShadow: colors.cardShadow,
       ),
       child: Column(children: children),
     );
@@ -253,6 +276,7 @@ class _SettingsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -274,19 +298,19 @@ class _SettingsRow extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                       ),
                     ),
-                    if (subtitle != null)
+                    if (subtitle case final subtitle?)
                       Text(
-                        subtitle!,
+                        subtitle,
                         style: TextStyle(
-                            fontSize: 13, color: AppColors.textSecondary),
+                            fontSize: 13, color: colors.textSecondary),
                       ),
                   ],
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),
@@ -304,9 +328,10 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(left: 52),
-      child: Container(height: 0.5, color: AppColors.border),
+      child: Container(height: 0.5, color: colors.border),
     );
   }
 }

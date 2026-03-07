@@ -1,47 +1,53 @@
 import 'package:flutter/material.dart';
 
-/// Electric Blue & Cyan dark theme color system.
+/// Dual-theme color system — Electric Blue & Cyan.
+/// All tokens branch on [isDark] to return correct light or dark value.
 class AppColors {
   final bool isDark;
 
   const AppColors({this.isDark = true});
 
+  /// Convenience: derive from current theme brightness.
+  static AppColors of(BuildContext context) {
+    return AppColors(isDark: Theme.of(context).brightness == Brightness.dark);
+  }
+
   // ── Backgrounds ────────────────────────────────────────────────────────────
 
-  static const Color bgPage = Color(0xFF080F1E);
-  static const Color bgCard = Color(0xFF0E1A2E);
-  static const Color navbar = Color(0xFF050D1A);
-  static const Color bgElevated = Color(0xFF162236);
+  Color get bgPage => isDark ? const Color(0xFF080F1E) : const Color(0xFFF5F7FA);
+  Color get bgCard => isDark ? const Color(0xFF0E1A2E) : const Color(0xFFFFFFFF);
+  Color get navbar => isDark ? const Color(0xFF050D1A) : const Color(0xFFFFFFFF);
+  Color get bgElevated => isDark ? const Color(0xFF162236) : const Color(0xFFEEF2F7);
 
   // ── Brand ──────────────────────────────────────────────────────────────────
 
   static const Color primary = Color(0xFF0066FF);
   static const Color primaryDark = Color(0xFF0052CC);
-  static const Color accent = Color(0xFF00D4FF);
-  static const Color accentDark = Color(0xFF00A8CC);
+  Color get accent => isDark ? const Color(0xFF00D4FF) : const Color(0xFF0099DD);
+  Color get accentDark => isDark ? const Color(0xFF00A8CC) : const Color(0xFF007AB8);
 
   // ── Text ───────────────────────────────────────────────────────────────────
 
-  static const Color textPrimary = Color(0xFFE8F4FF);
-  static const Color textSecondary = Color(0xFFB0C4D8);
-  static const Color textMuted = Color(0xFF4A6A8A);
-  static const Color textDisabled = Color(0xFF2A3A4A);
+  Color get textPrimary => isDark ? const Color(0xFFE8F4FF) : const Color(0xFF0A1628);
+  Color get textSecondary => isDark ? const Color(0xFFB0C4D8) : const Color(0xFF334155);
+  Color get textMuted => isDark ? const Color(0xFF4A6A8A) : const Color(0xFF64748B);
+  Color get textDisabled => isDark ? const Color(0xFF2A3A4A) : const Color(0xFFCBD5E1);
 
   // ── Borders ────────────────────────────────────────────────────────────────
 
-  static const Color border = Color(0xFF1A2A44);
-  static const Color borderLight = Color(0xFF243650);
+  Color get border => isDark ? const Color(0xFF1A2A44) : const Color(0xFFDDE3ED);
+  Color get borderLight => isDark ? const Color(0xFF243650) : const Color(0xFFEEF2F7);
 
   // ── Status ─────────────────────────────────────────────────────────────────
 
-  static const Color success = Color(0xFF00E676);
-  static const Color successBg = Color(0xFF0A2A1A);
+  Color get success => isDark ? const Color(0xFF00E676) : const Color(0xFF059669);
+  Color get successBg => isDark ? const Color(0xFF0A2A1A) : const Color(0xFFDCFCE7);
   static const Color warning = Color(0xFFFFB300);
-  static const Color warningBg = Color(0xFF2A2000);
-  static const Color danger = Color(0xFFFF5252);
-  static const Color dangerBg = Color(0xFF2A0A0A);
+  Color get warningBg => isDark ? const Color(0xFF2A2000) : const Color(0xFFFEF9C3);
+  Color get danger => isDark ? const Color(0xFFFF5252) : const Color(0xFFDC2626);
+  Color get dangerBg => isDark ? const Color(0xFF2A0A0A) : const Color(0xFFFFE4E4);
 
-  // ── Ball colours ───────────────────────────────────────────────────────────
+  // ── Ball colours (same in both themes) ─────────────────────────────────────
 
   static const Color ballYellow = Color(0xFFFFD700);
   static const Color ballGreen = Color(0xFF22C55E);
@@ -59,11 +65,17 @@ class AppColors {
     end: Alignment.centerRight,
   );
 
-  static const LinearGradient cardGradient = LinearGradient(
-    colors: [Color(0xFF0E2A5A), Color(0xFF061428)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  LinearGradient get cardGradient => isDark
+      ? const LinearGradient(
+          colors: [Color(0xFF0D2D6B), Color(0xFF071A40)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        )
+      : const LinearGradient(
+          colors: [Color(0xFFDBEAFF), Color(0xFFEEF5FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
 
   static const LinearGradient subtractGradient = LinearGradient(
     colors: [Color(0xFFEF4444), Color(0xFFDC2626)],

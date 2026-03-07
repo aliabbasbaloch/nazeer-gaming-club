@@ -78,15 +78,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showNewGameDialog() {
+    final colors = AppColors.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: const Text('New Game', style: TextStyle(color: AppColors.textPrimary)),
-        content: const Text('This will end the current game. Continue?', style: TextStyle(color: AppColors.textSecondary)),
+        backgroundColor: colors.bgCard,
+        title: Text('New Game', style: TextStyle(color: colors.textPrimary)),
+        content: Text('This will end the current game. Continue?', style: TextStyle(color: colors.textSecondary)),
         actions: [
           TextButton(
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            child: Text('Cancel', style: TextStyle(color: colors.textMuted)),
             onPressed: () => Navigator.pop(context),
           ),
           TextButton(
@@ -94,7 +95,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Navigator.pop(context);
               ref.read(gameProvider.notifier).createNewGame();
             },
-            child: const Text('Start New', style: TextStyle(color: AppColors.danger)),
+            child: Text('Start New', style: TextStyle(color: colors.danger)),
           ),
         ],
       ),
@@ -102,15 +103,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showRemoveDialog(String id, String name) {
+    final colors = AppColors.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: const Text('Remove Player', style: TextStyle(color: AppColors.textPrimary)),
-        content: Text('Remove $name from the game?', style: const TextStyle(color: AppColors.textSecondary)),
+        backgroundColor: colors.bgCard,
+        title: Text('Remove Player', style: TextStyle(color: colors.textPrimary)),
+        content: Text('Remove $name from the game?', style: TextStyle(color: colors.textSecondary)),
         actions: [
           TextButton(
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            child: Text('Cancel', style: TextStyle(color: colors.textMuted)),
             onPressed: () => Navigator.pop(context),
           ),
           TextButton(
@@ -118,7 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Navigator.pop(context);
               ref.read(gameProvider.notifier).removePlayer(id);
             },
-            child: const Text('Remove', style: TextStyle(color: AppColors.danger)),
+            child: Text('Remove', style: TextStyle(color: colors.danger)),
           ),
         ],
       ),
@@ -130,7 +132,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     for (int i = 0; i < a.length; i++) {
       if (a[i].id != b[i].id ||
           a[i].score != b[i].score ||
-          a[i].isCompleted != b[i].isCompleted) return false;
+          a[i].isCompleted != b[i].isCompleted) {
+        return false;
+      }
     }
     return true;
   }
@@ -138,6 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final game = ref.watch(gameProvider);
+    final colors = ref.watch(appColorsProvider);
 
     // Sync animated list
     if (game != null) {
@@ -149,11 +154,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       appBar: AppBar(
-        backgroundColor: AppColors.navbar,
+        backgroundColor: colors.navbar,
         centerTitle: true,
-        title: const Column(
+        title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -161,7 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
-                color: AppColors.textPrimary,
+                color: colors.textPrimary,
               ),
             ),
             Text(
@@ -169,7 +174,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
-                color: AppColors.textMuted,
+                color: colors.textMuted,
               ),
             ),
           ],
@@ -177,7 +182,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         actions: [
           if (game != null)
             IconButton(
-              icon: const Icon(Icons.qr_code, color: AppColors.accent),
+              icon: Icon(Icons.qr_code, color: colors.accent),
               tooltip: 'Transfer Game',
               onPressed: () => Navigator.push(
                 context,
@@ -186,8 +191,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner,
-                color: AppColors.textMuted),
+            icon: Icon(Icons.qr_code_scanner,
+                color: colors.textMuted),
             tooltip: 'Receive Game',
             onPressed: () => Navigator.push(
               context,
@@ -196,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           IconButton(
             onPressed: _showNewGameDialog,
-            icon: const Icon(Icons.refresh, color: AppColors.danger, size: 22),
+            icon: Icon(Icons.refresh, color: colors.danger, size: 22),
           ),
         ],
       ),
@@ -280,6 +285,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Row(
       children: [
         Container(
@@ -293,11 +299,11 @@ class _SectionHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
-            color: AppColors.textSecondary,
+            color: colors.textSecondary,
           ),
         ),
       ],
@@ -329,6 +335,7 @@ class _AddPlayerRowState extends State<_AddPlayerRow> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Row(
       children: [
         Expanded(
@@ -336,17 +343,17 @@ class _AddPlayerRowState extends State<_AddPlayerRow> {
             controller: widget.controller,
             decoration: InputDecoration(
               hintText: 'Enter player name...',
-              hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 15),
+              hintStyle: TextStyle(color: colors.textMuted, fontSize: 15),
               filled: true,
-              fillColor: AppColors.bgCard,
-              prefixIcon: const Icon(Icons.person_add, color: AppColors.textMuted, size: 20),
+              fillColor: colors.bgCard,
+              prefixIcon: Icon(Icons.person_add, color: colors.textMuted, size: 20),
               suffixIcon: ValueListenableBuilder<TextEditingValue>(
                 valueListenable: widget.controller,
-                builder: (_, val, __) => val.text.isEmpty
+                builder: (_, val, _) => val.text.isEmpty
                     ? const SizedBox.shrink()
                     : IconButton(
                         onPressed: () => widget.controller.clear(),
-                        icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
+                        icon: Icon(Icons.close, size: 18, color: colors.textMuted),
                       ),
               ),
               border: OutlineInputBorder(
@@ -359,7 +366,7 @@ class _AddPlayerRowState extends State<_AddPlayerRow> {
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             ),
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: colors.textPrimary),
             onSubmitted: (_) => widget.onAdd(),
             enabled: widget.canAdd,
           ),
@@ -381,7 +388,7 @@ class _AddPlayerRowState extends State<_AddPlayerRow> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: widget.canAdd ? AppColors.primaryGradient : null,
-                color: widget.canAdd ? null : AppColors.textDisabled,
+                color: widget.canAdd ? null : colors.textDisabled,
               ),
               child: const Icon(Icons.add, color: Colors.white, size: 22),
             ),
@@ -417,12 +424,12 @@ class _PlayerListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = const AppColors();
+    final colors = AppColors.of(context);
     final accentColor = player.isCompleted
         ? AppColors.warning
         : isActive
             ? AppColors.primary
-            : AppColors.border;
+            : colors.border;
 
     return SlideTransition(
       position: Tween<Offset>(
@@ -437,11 +444,12 @@ class _PlayerListItem extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: AppColors.bgCard,
+              color: colors.bgCard,
               borderRadius: BorderRadius.circular(14),
-              border: isActive
-                  ? Border.all(color: AppColors.primary, width: 1.5)
-                  : null,
+              border: Border.all(
+                color: isActive ? AppColors.primary : colors.border,
+                width: isActive ? 1.5 : 1,
+              ),
               boxShadow: isActive
                   ? colors.activeCardShadow(AppColors.primary)
                   : colors.cardShadow,
@@ -468,17 +476,17 @@ class _PlayerListItem extends StatelessWidget {
                         Container(
                           width: 28,
                           height: 28,
-                          decoration: const BoxDecoration(
-                            color: AppColors.bgElevated,
+                          decoration: BoxDecoration(
+                            color: colors.bgElevated,
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             '$rank',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: colors.textSecondary,
                             ),
                           ),
                         ),
@@ -490,7 +498,7 @@ class _PlayerListItem extends StatelessWidget {
                             fontWeight: isActive
                                 ? FontWeight.w700
                                 : FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: colors.textPrimary,
                           ),
                         ),
                       ],
@@ -527,17 +535,17 @@ class _PlayerListItem extends StatelessWidget {
                             ? AppColors.warning
                             : isActive
                                 ? AppColors.primary
-                                : AppColors.textSecondary,
+                                : colors.textSecondary,
                       ),
                     ),
                   ),
                   if (!isActive && !player.isCompleted)
                     GestureDetector(
                       onTap: onRemove,
-                      child: const Padding(
-                        padding: EdgeInsets.only(right: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 12),
                         child: Icon(Icons.remove_circle_outline,
-                            color: AppColors.danger, size: 20),
+                            color: colors.danger, size: 20),
                       ),
                     ),
                 ],
@@ -559,12 +567,13 @@ class _EmptyPlayersHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: colors.border, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -583,21 +592,21 @@ class _EmptyPlayersHint extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'No Players Yet',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Type a name above and tap + to add players',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: colors.textSecondary,
               height: 1.4,
             ),
           ),
@@ -622,6 +631,7 @@ class _CurrentPlayerCard extends StatefulWidget {
 class _CurrentPlayerCardState extends State<_CurrentPlayerCard> {
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final game = widget.game;
     final player = game?.currentPlayer;
 
@@ -629,20 +639,31 @@ class _CurrentPlayerCardState extends State<_CurrentPlayerCard> {
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: AppColors.cardGradient,
+        gradient: colors.cardGradient,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
       ),
       child: player == null
-          ? const Column(
+          ? Column(
               children: [
                 Icon(Icons.grid_view,
-                    size: 40, color: AppColors.textSecondary),
-                SizedBox(height: 8),
+                    size: 40, color: colors.textSecondary),
+                const SizedBox(height: 8),
                 Text(
                   'Tap a player to start',
                   style: TextStyle(
                     fontSize: 15,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -650,32 +671,43 @@ class _CurrentPlayerCardState extends State<_CurrentPlayerCard> {
             )
           : Column(
               children: [
-                const Text(
-                  'NOW PLAYING',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
-                    color: AppColors.accent,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colors.accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    'NOW PLAYING',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2,
+                      color: colors.accent,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   player.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '${player.score}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 64,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.primary,
+                    color: colors.isDark ? Colors.white : AppColors.primary,
                     height: 1.0,
+                    shadows: colors.isDark
+                        ? [Shadow(color: AppColors.primary, blurRadius: 20)]
+                        : null,
                   ),
                 ),
                 if (game != null)
@@ -808,6 +840,7 @@ class _GameTimerChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
     final elapsed = ref.watch(gameTimerProvider);
     if (elapsed == 0) return const SizedBox.shrink();
 
@@ -817,23 +850,23 @@ class _GameTimerChip extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.bgElevated,
+            color: colors.bgElevated,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border, width: 1),
+            border: Border.all(color: colors.border, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.timer,
-                  size: 14, color: AppColors.accent),
+              Icon(Icons.timer,
+                  size: 14, color: colors.accent),
               const SizedBox(width: 6),
               Text(
                 formatGameTime(elapsed),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                  color: AppColors.accent,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: colors.accent,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -867,8 +900,10 @@ class _BallButtonState extends State<_BallButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final ball = widget.ball;
-    final ballColor = ball.color;
+    final isBlack = ball == SnookerBall.black;
+    final ballColor = isBlack ? const Color(0xFF374151) : ball.color;
     final s = widget.size;
     // Scale derived values relative to ball size
     final highlightSize = s * 0.21;
@@ -876,6 +911,13 @@ class _BallButtonState extends State<_BallButton> {
     final highlightLeft = s * 0.18;
     final fontSize = (s * 0.30).clamp(14.0, 26.0);
     final labelFontSize = (s * 0.14).clamp(9.0, 13.0);
+
+    final ringColor = isBlack
+        ? const Color(0xFF9CA3AF)
+        : ballColor.withValues(alpha: 0.6);
+    final glowColor = isBlack
+        ? const Color(0xFF6B7280).withValues(alpha: 0.5)
+        : ballColor.withValues(alpha: 0.45);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _scale = 0.88),
@@ -891,60 +933,66 @@ class _BallButtonState extends State<_BallButton> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: s,
-              height: s,
-              child: Stack(
-                children: [
-                  Container(
-                    width: s,
-                    height: s,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: ballColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color: ballColor.withValues(alpha: 0.45),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: ringColor, width: 2.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: glowColor,
+                    blurRadius: 14,
+                    spreadRadius: 1,
                   ),
-                  Positioned(
-                    top: highlightTop,
-                    left: highlightLeft,
-                    child: Container(
-                      width: highlightSize,
-                      height: highlightSize,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.35),
-                      ),
-                    ),
-                  ),
-                  if (widget.isSubtract)
+                ],
+              ),
+              child: SizedBox(
+                width: s,
+                height: s,
+                child: Stack(
+                  children: [
                     Container(
                       width: s,
                       height: s,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.danger.withValues(alpha: 0.15),
+                        color: ballColor,
                       ),
                     ),
-                  Center(
-                    child: Text(
-                      '${ball.points}',
-                      style: TextStyle(
-                        fontSize: fontSize,
-                        fontWeight: FontWeight.bold,
-                        color: ball == SnookerBall.yellow
-                            ? AppColors.bgPage
-                            : Colors.white,
+                    Positioned(
+                      top: highlightTop,
+                      left: highlightLeft,
+                      child: Container(
+                        width: highlightSize,
+                        height: highlightSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    if (widget.isSubtract)
+                      Container(
+                        width: s,
+                        height: s,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.danger.withValues(alpha: 0.15),
+                        ),
+                      ),
+                    Center(
+                      child: Text(
+                        '${ball.points}',
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
+                          color: ball == SnookerBall.yellow
+                              ? const Color(0xFF78350F)
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 5),
@@ -975,6 +1023,7 @@ class _SubtractToggle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
     final on = game.isSubtractMode;
     return GestureDetector(
       onTap: () => ref.read(gameProvider.notifier).toggleSubtractMode(),
@@ -983,15 +1032,16 @@ class _SubtractToggle extends ConsumerWidget {
         height: 48,
         decoration: BoxDecoration(
           gradient: on ? AppColors.subtractGradient : null,
-          color: on ? null : AppColors.bgCard,
+          color: on ? null : colors.bgCard,
           borderRadius: BorderRadius.circular(12),
-          border:
-              on ? null : Border.all(color: AppColors.border, width: 1.5),
+          border: on
+              ? Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.6), width: 1.5)
+              : Border.all(color: colors.border, width: 1.5),
           boxShadow: on
               ? [
                   BoxShadow(
-                    color: AppColors.danger.withValues(alpha: 0.35),
-                    blurRadius: 12,
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                    blurRadius: 16,
                     offset: const Offset(0, 4),
                   )
                 ]
@@ -1001,7 +1051,7 @@ class _SubtractToggle extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.remove_circle_outline,
-                color: on ? Colors.white : AppColors.textSecondary,
+                color: on ? Colors.white : colors.textSecondary,
                 size: 20),
             const SizedBox(width: 8),
             Text(
@@ -1009,7 +1059,7 @@ class _SubtractToggle extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: on ? Colors.white : AppColors.textSecondary,
+                color: on ? Colors.white : colors.textSecondary,
               ),
             ),
           ],
@@ -1075,12 +1125,13 @@ class _ActionBtnState extends State<_ActionBtn> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final enabled = widget.onTap != null;
     final foreground = widget.filled
         ? Colors.white
         : enabled
             ? AppColors.primary
-            : AppColors.textMuted;
+            : colors.textMuted;
 
     return GestureDetector(
       onTapDown: enabled ? (_) => setState(() => _scale = 0.95) : null,
@@ -1102,14 +1153,17 @@ class _ActionBtnState extends State<_ActionBtn> {
                 : null,
             color: widget.filled && enabled
                 ? null
-                : Colors.transparent,
+                : colors.bgElevated,
             borderRadius: BorderRadius.circular(12),
             border: widget.filled
-                ? null
+                ? Border.all(color: colors.accent.withValues(alpha: 0.4), width: 1)
                 : Border.all(
-                    color: enabled ? AppColors.primary : AppColors.textMuted,
+                    color: enabled ? colors.border : colors.textMuted,
                     width: 1.5,
                   ),
+            boxShadow: widget.filled && enabled
+                ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 16)]
+                : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

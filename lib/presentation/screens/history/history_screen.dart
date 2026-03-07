@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/history_action.dart';
 import '../../providers/history_provider.dart';
+import '../../providers/settings_provider.dart';
 
 // ---------------------------------------------------------------------------
 
@@ -15,6 +16,7 @@ class HistoryScreen extends ConsumerStatefulWidget {
 
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   void _confirmClear(BuildContext context) {
+    final colors = AppColors.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -31,7 +33,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               Navigator.pop(context);
               ref.read(historyProvider.notifier).clearHistory();
             },
-            child: Text('Clear', style: TextStyle(color: AppColors.danger)),
+            child: Text('Clear', style: TextStyle(color: colors.danger)),
           ),
         ],
       ),
@@ -41,6 +43,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final history = ref.watch(historyProvider);
+    final colors = ref.watch(appColorsProvider);
 
     // getAllHistory() already returns entries sorted newest-first by timestamp.
     final scoreEntries = history
@@ -50,20 +53,20 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       appBar: AppBar(
-        backgroundColor: AppColors.navbar,
+        backgroundColor: colors.navbar,
         centerTitle: true,
         title: Text(
           'History',
           style:
-              TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              TextStyle(fontWeight: FontWeight.bold, color: colors.textPrimary),
         ),
         actions: [
           if (scoreEntries.isNotEmpty)
             IconButton(
               onPressed: () => _confirmClear(context),
-              icon: Icon(Icons.delete, color: AppColors.danger, size: 22),
+              icon: Icon(Icons.delete, color: colors.danger, size: 22),
             ),
         ],
       ),
@@ -91,19 +94,20 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.access_time,
-              size: 64, color: AppColors.textSecondary.withValues(alpha: 0.4)),
+              size: 64, color: colors.textSecondary.withValues(alpha: 0.4)),
           const SizedBox(height: 12),
           Text(
             'No History Yet',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary),
+                color: colors.textSecondary),
           ),
           const SizedBox(height: 6),
           Text(
@@ -111,7 +115,7 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
-                color: AppColors.textSecondary),
+                color: colors.textSecondary),
           ),
         ],
       ),
@@ -133,8 +137,8 @@ class _HistoryRow extends StatelessWidget {
   const _HistoryRow({required this.action});
 
   // Ball name → left-border colour (AppColors palette)
-  static Color _borderColor(String? ballName, bool isSubtract) {
-    if (isSubtract) return AppColors.danger;
+  static Color _borderColor(String? ballName, bool isSubtract, AppColors colors) {
+    if (isSubtract) return colors.danger;
     switch ((ballName ?? '').toLowerCase()) {
       case 'yellow':
         return AppColors.ballYellow;
@@ -151,7 +155,7 @@ class _HistoryRow extends StatelessWidget {
       case 'red':
         return AppColors.ballRed;
       default:
-        return AppColors.success;
+        return colors.success;
     }
   }
 
@@ -185,10 +189,11 @@ class _HistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final isSubtract = action.actionType == ActionType.subtract;
     final points = action.pointsChanged ?? 0;
-    final badgeColor = isSubtract ? AppColors.danger : AppColors.success;
-    final border = _borderColor(action.ballColor, isSubtract);
+    final badgeColor = isSubtract ? colors.danger : colors.success;
+    final border = _borderColor(action.ballColor, isSubtract, colors);
     final emoji = _ballEmoji(action.ballColor);
     final badge = isSubtract ? '\u2212$points' : '+$points';
     final playerName = action.playerName ?? 'Unknown';
@@ -198,10 +203,10 @@ class _HistoryRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(12),
         border: Border(left: BorderSide(color: border, width: 4)),
-        boxShadow: const AppColors().cardShadow,
+        boxShadow: colors.cardShadow,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -224,7 +229,7 @@ class _HistoryRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -234,7 +239,7 @@ class _HistoryRow extends StatelessWidget {
                         : '$ballLabel  \u2022  ${_formatTime(action.timestamp)}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: colors.textSecondary,
                     ),
                   ),
                 ],

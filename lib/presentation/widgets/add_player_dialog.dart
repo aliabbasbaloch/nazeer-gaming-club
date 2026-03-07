@@ -73,7 +73,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               child: Text(
                 _errorMessage,
                 style: TextStyle(
-                  color: AppColors.danger,
+                  color: AppColors.of(context).danger,
                   fontSize: 12,
                 ),
               ),

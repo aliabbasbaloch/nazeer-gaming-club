@@ -13,10 +13,11 @@ class GameAnalyticsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -27,31 +28,31 @@ class GameAnalyticsWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 20),
-          _buildStatsGrid(),
+          _buildStatsGrid(colors),
           const SizedBox(height: 24),
           Text(
             'Player Scores',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
           SizedBox(
             height: 200,
-            child: _buildBarChart(),
+            child: _buildBarChart(colors),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid(AppColors colors) {
     final totalPlayers = game.players.length;
     final completedPlayers = game.completedPlayers.length;
     final activePlayers = game.activePlayers.length;
@@ -64,6 +65,7 @@ class GameAnalyticsWidget extends StatelessWidget {
             'Players',
             '$totalPlayers',
             AppColors.primary,
+            colors,
           ),
         ),
         const SizedBox(width: 12),
@@ -71,7 +73,8 @@ class GameAnalyticsWidget extends StatelessWidget {
           child: _buildStatCard(
             'Completed',
             '$completedPlayers',
-            AppColors.success,
+            colors.success,
+            colors,
           ),
         ),
         const SizedBox(width: 12),
@@ -80,6 +83,7 @@ class GameAnalyticsWidget extends StatelessWidget {
             'Active',
             '$activePlayers',
             AppColors.warning,
+            colors,
           ),
         ),
         const SizedBox(width: 12),
@@ -87,14 +91,15 @@ class GameAnalyticsWidget extends StatelessWidget {
           child: _buildStatCard(
             'Total Score',
             '$totalScore',
-            AppColors.accent,
+            colors.accent,
+            colors,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color) {
+  Widget _buildStatCard(String label, String value, Color color, AppColors colors) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -116,7 +121,7 @@ class GameAnalyticsWidget extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: colors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -125,12 +130,12 @@ class GameAnalyticsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildBarChart() {
+  Widget _buildBarChart(AppColors colors) {
     if (game.players.isEmpty) {
       return Center(
         child: Text(
           'No data to display',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: colors.textSecondary),
         ),
       );
     }
@@ -148,7 +153,7 @@ class GameAnalyticsWidget extends StatelessWidget {
             BarChartRodData(
               toY: progress.toDouble(),
               color: player.isCompleted
-                  ? AppColors.success
+                  ? colors.success
                   : AppColors.primary,
               width: 20,
               borderRadius: const BorderRadius.vertical(
@@ -182,7 +187,7 @@ class GameAnalyticsWidget extends StatelessWidget {
                       name,
                       style: TextStyle(
                         fontSize: 10,
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                       ),
                     ),
                   );
@@ -200,7 +205,7 @@ class GameAnalyticsWidget extends StatelessWidget {
                   '${value.toInt()}%',
                   style: TextStyle(
                     fontSize: 10,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                   ),
                 );
               },
@@ -219,7 +224,7 @@ class GameAnalyticsWidget extends StatelessWidget {
           horizontalInterval: 25,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: AppColors.bgElevated,
+              color: colors.bgElevated,
               strokeWidth: 1,
             );
           },

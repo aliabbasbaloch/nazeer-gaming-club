@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../main_navigation.dart';
+import '../../providers/settings_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -37,8 +38,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     Future.delayed(const Duration(milliseconds: 2800), () {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const MainNavigation(),
-        transitionsBuilder: (_, animation, __, child) => FadeTransition(opacity: animation, child: child),
+        pageBuilder: (_, _, _) => const MainNavigation(),
+        transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 400),
       ));
     });
@@ -54,8 +55,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = ref.watch(appColorsProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -71,7 +74,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.accent.withValues(alpha: 0.3),
+                          color: colors.accent.withValues(alpha: 0.3),
                           blurRadius: 60,
                           spreadRadius: 20,
                         ),
@@ -96,9 +99,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             const SizedBox(height: 8),
             FadeTransition(
               opacity: _bylineOpacity,
-              child: const Text(
+              child: Text(
                 'by Ali Abbas',
-                style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: AppColors.textMuted),
+                style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: colors.textMuted),
               ),
             ),
           ],

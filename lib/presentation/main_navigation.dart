@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/theme/app_colors.dart';
 import 'providers/draw_provider.dart';
 import 'providers/game_provider.dart';
 import 'providers/settings_provider.dart';
@@ -21,8 +20,8 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
 
   static const List<Widget> _screens = [
     HomeScreen(),
-    DrawScreen(),
     HistoryScreen(),
+    DrawScreen(),
     SettingsScreen(),
   ];
 
@@ -48,6 +47,8 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ref.watch(appColorsProvider);
+
     // Listen for navigation request from Draw screen
     ref.listen<bool>(navigateToHomeProvider, (prev, next) {
       if (next) {
@@ -66,22 +67,24 @@ class _MainNavigationState extends ConsumerState<MainNavigation> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.navbar,
-        selectedItemColor: AppColors.accent,
-        unselectedItemColor: AppColors.textMuted,
+        backgroundColor: colors.navbar,
+        selectedItemColor: colors.accent,
+        unselectedItemColor: colors.textMuted,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.casino), label: 'Draw'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+          BottomNavigationBarItem(icon: Icon(Icons.casino), label: 'Draw'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),

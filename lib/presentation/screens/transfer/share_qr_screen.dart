@@ -12,17 +12,18 @@ class ShareQrScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final qrData = GameTransferService.encodeGame(game);
 
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       appBar: AppBar(
-        backgroundColor: AppColors.navbar,
-        title: const Text(
+        backgroundColor: colors.navbar,
+        title: Text(
           'Transfer Game',
-          style: TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: colors.textPrimary),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: colors.textPrimary),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -34,27 +35,27 @@ class ShareQrScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.bgCard,
+                  color: colors.bgCard,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: colors.border),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
-                    Icon(Icons.qr_code, color: AppColors.accent, size: 32),
-                    SizedBox(height: 8),
+                    Icon(Icons.qr_code, color: colors.accent, size: 32),
+                    const SizedBox(height: 8),
                     Text(
                       'Share this QR Code',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'The other player scans this to load your game',
                       style: TextStyle(
-                        color: AppColors.textMuted,
+                        color: colors.textMuted,
                         fontSize: 13,
                       ),
                       textAlign: TextAlign.center,
@@ -71,7 +72,7 @@ class ShareQrScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accent.withValues(alpha: 0.25),
+                      color: colors.accent.withValues(alpha: 0.25),
                       blurRadius: 30,
                       spreadRadius: 4,
                     ),
@@ -102,12 +103,12 @@ class ShareQrScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Game Summary section
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'GAME SUMMARY',
                   style: TextStyle(
-                    color: AppColors.accent,
+                    color: colors.accent,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2,
@@ -127,8 +128,8 @@ class ShareQrScreen extends StatelessWidget {
                   chipColor = AppColors.primary;
                   chipTextColor = Colors.white;
                 } else {
-                  chipColor = AppColors.bgElevated;
-                  chipTextColor = AppColors.textSecondary;
+                  chipColor = colors.bgElevated;
+                  chipTextColor = colors.textSecondary;
                 }
 
                 return Padding(
@@ -137,17 +138,17 @@ class ShareQrScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.bgCard,
+                      color: colors.bgCard,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: colors.border),
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
                             player.name,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: colors.textPrimary,
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
@@ -182,26 +183,26 @@ class ShareQrScreen extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.bgCard,
+                  color: colors.bgCard,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: colors.border),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.flag, color: AppColors.accent, size: 18),
+                    Icon(Icons.flag, color: colors.accent, size: 18),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'Target Score',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: colors.textSecondary,
                         fontSize: 13,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       '${game.targetScore}',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: colors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -213,10 +214,10 @@ class ShareQrScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Bottom note
-              const Text(
+              Text(
                 'QR code expires when you leave this screen',
                 style: TextStyle(
-                  color: AppColors.textMuted,
+                  color: colors.textMuted,
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),

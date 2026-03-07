@@ -20,6 +20,7 @@ class PlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final progress = (player.score / targetScore).clamp(0.0, 1.0);
     
     return GestureDetector(
@@ -30,12 +31,12 @@ class PlayerCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive
               ? AppColors.primary.withValues(alpha: 0.1)
-              : AppColors.bgCard,
+              : colors.bgCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive
                 ? AppColors.primary
-                : AppColors.border,
+                : colors.border,
             width: 2,
           ),
         ),
@@ -49,8 +50,8 @@ class PlayerCard extends StatelessWidget {
                   child: Row(
                     children: [
                       if (isActive)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
+                        const Padding(
+                          padding: EdgeInsets.only(right: 8),
                           child: Icon(
                             Icons.check_circle,
                             color: AppColors.primary,
@@ -65,7 +66,7 @@ class PlayerCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: isActive
                                 ? AppColors.primary
-                                : AppColors.textPrimary,
+                                : colors.textPrimary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -82,7 +83,7 @@ class PlayerCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.success,
+                          color: colors.success,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
@@ -101,7 +102,7 @@ class PlayerCard extends StatelessWidget {
                       onPressed: onRemove,
                       icon: Icon(
                         Icons.delete,
-                        color: AppColors.danger,
+                        color: colors.danger,
                         size: 20,
                       ),
                     ),
@@ -118,14 +119,14 @@ class PlayerCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: colors.textPrimary,
                   ),
                 ),
                 Text(
                   'Turns: ${player.turnCount}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textSecondary,
+                    color: colors.textSecondary,
                   ),
                 ),
               ],
@@ -135,10 +136,10 @@ class PlayerCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: progress,
-                backgroundColor: AppColors.bgElevated,
+                backgroundColor: colors.bgElevated,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   player.isCompleted
-                      ? AppColors.success
+                      ? colors.success
                       : AppColors.primary,
                 ),
                 minHeight: 8,

@@ -48,10 +48,11 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
 
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
+    final colors = AppColors.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.danger,
+        backgroundColor: colors.danger,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -65,19 +66,21 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
     final formattedDate =
         DateFormat('d MMM yyyy, h:mm a').format(transfer.transferredAt.toLocal());
 
+    final colors = AppColors.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
+        backgroundColor: colors.bgCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: colors.border),
         ),
-        title: const Text(
+        title: Text(
           'Load This Game?',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: colors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -89,13 +92,13 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
               // Transfer timestamp
               Row(
                 children: [
-                  const Icon(Icons.access_time,
-                      color: AppColors.textMuted, size: 16),
+                  Icon(Icons.access_time,
+                      color: colors.textMuted, size: 16),
                   const SizedBox(width: 6),
                   Text(
                     formattedDate,
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
+                    style: TextStyle(
+                      color: colors.textMuted,
                       fontSize: 13,
                     ),
                   ),
@@ -112,14 +115,14 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
                           const Icon(Icons.check_circle,
                               color: AppColors.warning, size: 16)
                         else
-                          const Icon(Icons.person,
-                              color: AppColors.textMuted, size: 16),
+                          Icon(Icons.person,
+                              color: colors.textMuted, size: 16),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             p.name,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: colors.textPrimary,
                               fontSize: 14,
                             ),
                           ),
@@ -129,7 +132,7 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
                           style: TextStyle(
                             color: p.isCompleted
                                 ? AppColors.warning
-                                : AppColors.textSecondary,
+                                : colors.textSecondary,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -143,12 +146,12 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
               // Target score
               Row(
                 children: [
-                  const Icon(Icons.flag, color: AppColors.accent, size: 16),
+                  Icon(Icons.flag, color: colors.accent, size: 16),
                   const SizedBox(width: 6),
                   Text(
                     'Target: ${transfer.targetScore}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: colors.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -161,7 +164,7 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.warningBg,
+                    color: colors.warningBg,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: AppColors.warning.withValues(alpha: 0.4),
@@ -195,17 +198,17 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
               _isProcessing = false;
             },
             child:
-                const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+                Text('Cancel', style: TextStyle(color: colors.textMuted)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _loadTransferredGame(transfer);
             },
-            child: const Text(
+            child: Text(
               'Load Game',
               style: TextStyle(
-                  color: AppColors.accent, fontWeight: FontWeight.bold),
+                  color: colors.accent, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -219,13 +222,14 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
 
     if (!mounted) return;
 
+    final colors = AppColors.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           'Game loaded — ${transfer.players.length} players',
           style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: AppColors.success,
+        backgroundColor: colors.success,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -235,15 +239,16 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: AppColors.bgPage,
+      backgroundColor: colors.bgPage,
       appBar: AppBar(
-        backgroundColor: AppColors.navbar,
-        title: const Text(
+        backgroundColor: colors.navbar,
+        title: Text(
           'Scan to Receive Game',
-          style: TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: colors.textPrimary),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: colors.textPrimary),
       ),
       body: Stack(
         children: [
@@ -252,21 +257,22 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
             controller: _scannerController,
             onDetect: _onQRDetected,
             errorBuilder: (context, error, child) {
+              final errColors = AppColors.of(context);
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(32),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.camera_alt,
-                          color: AppColors.textMuted, size: 48),
+                      Icon(Icons.camera_alt,
+                          color: errColors.textMuted, size: 48),
                       const SizedBox(height: 16),
                       Text(
                         error.errorCode == MobileScannerErrorCode.permissionDenied
                             ? 'Camera permission denied.\nPlease enable it in Settings.'
                             : 'Camera error: ${error.errorDetails?.message ?? 'Unknown'}',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: errColors.textSecondary,
                           fontSize: 14,
                         ),
                         textAlign: TextAlign.center,
@@ -281,7 +287,7 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
           // Scan overlay
           CustomPaint(
             size: Size.infinite,
-            painter: _ScanOverlayPainter(),
+            painter: _ScanOverlayPainter(accentColor: colors.accent),
           ),
 
           // Instruction card at top
@@ -292,20 +298,20 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.bgCard.withValues(alpha: 0.85),
+                color: colors.bgCard.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: colors.border),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(Icons.qr_code_scanner,
-                      color: AppColors.accent, size: 24),
-                  SizedBox(width: 12),
+                      color: colors.accent, size: 24),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Point camera at the QR code\non the other player\'s phone',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                         fontSize: 13,
                       ),
                     ),
@@ -342,6 +348,10 @@ class _ScanQrScreenState extends ConsumerState<ScanQrScreen> {
 }
 
 class _ScanOverlayPainter extends CustomPainter {
+  final Color accentColor;
+
+  _ScanOverlayPainter({required this.accentColor});
+
   @override
   void paint(Canvas canvas, Size size) {
     const cutoutSize = 240.0;
@@ -366,7 +376,7 @@ class _ScanOverlayPainter extends CustomPainter {
     const bracketLen = 30.0;
     const bracketThickness = 3.0;
     final bracketPaint = Paint()
-      ..color = AppColors.accent
+      ..color = accentColor
       ..strokeWidth = bracketThickness
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
