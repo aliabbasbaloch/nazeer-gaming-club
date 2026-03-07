@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎱 Snooker Score Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --yellow: #ffdd00;
+            --green: #33ff77;
+            --brown: #d2691e;
+            --blue: #4d9fff;
+            --pink: #ff66cc;
+            --black: #222222;
+            --red: #ff5555;
+            --purple: #aa66ff;
+        }
+        
+        @keyframes scoreFlash {
+            0% { transform: scale(1); color: #33ff77; }
+            50% { transform: scale(1.08); color: #ffdd00; }
+            100% { transform: scale(1); color: #33ff77; }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(77, 159, 255, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(77, 159, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(77, 159, 255, 0); }
+        }
+        
+        .score-flash {
+            animation: scoreFlash 0.4s ease;
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #21262d;
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px;
+        }
+        
+        /* Ball button highlight effect */
+        .ball-btn::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 20%;
+            height: 20%;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+        
+        /* Touch optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            input, select, button {
+                font-size: 16px;
+            }
+        }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-bg': '#0d1117',
+                        'secondary-bg': '#161b22',
+                        'accent-bg': '#21262d',
+                        'text-primary': '#f0f6fc',
+                        'text-secondary': '#8b949e',
+                        'border': '#30363d',
+                        'custom-yellow': '#ffdd00',
+                        'custom-green': '#33ff77',
+                        'custom-brown': '#d2691e',
+                        'custom-blue': '#4d9fff',
+                        'custom-pink': '#ff66cc',
+                        'custom-black': '#222222',
+                        'custom-red': '#ff5555',
+                        'custom-purple': '#aa66ff'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-primary-bg text-text-primary min-h-screen p-2.5 md:p-4" style="background-image: radial-gradient(circle at 20% 30%, rgba(255, 221, 0, 0.03) 0%, transparent 20%),
+                              radial-gradient(circle at 80% 80%, rgba(51, 255, 119, 0.03) 0%, transparent 20%);">
+    <div class="container mx-auto max-w-4xl">
+        <!-- Header -->
+        <header class="bg-secondary-bg border border-border rounded-xl text-center p-3 mb-4">
+            <h1 class="text-xl md:text-2xl font-bold text-custom-blue mb-1 flex items-center justify-center gap-2">
+                <i class="fas fa-billiard-ball"></i> 🎱 Snooker Score Tracker
+            </h1>
+            <div class="text-text-secondary text-xs italic mt-1 flex items-center justify-center gap-1">
+                👨‍💻 By Zeeshan Zounr
+            </div>
+            <p class="text-text-secondary text-sm mt-1 flex items-center justify-center gap-1">
+                <i class="fas fa-users"></i> Track scores for up to 12 players
+            </p>
+        </header>
+
+        <!-- Add Player Section -->
+        <section class="bg-secondary-bg border border-border rounded-xl p-3 mb-3">
+            <div class="flex gap-2">
+                <input type="text" id="playerNameInput" 
+                       class="flex-1 bg-accent-bg border border-border rounded-lg px-3 py-2.5 text-text-primary focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-transparent"
+                       placeholder="Player name 👤" maxlength="15" autocapitalize="words">
+                <button id="addPlayerBtn" 
+                        class="bg-gradient-to-br from-custom-blue to-blue-700 text-white font-semibold rounded-lg px-4 py-2.5 flex items-center justify-center gap-1.5 shadow-lg shadow-blue-900/20 active:scale-95 transition-transform">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Players Section -->
+        <section class="bg-secondary-bg border border-border rounded-xl p-3 mb-3 max-h-48 overflow-y-auto custom-scrollbar">
+            <h3 class="text-base font-medium text-text-primary mb-2.5 flex items-center gap-1.5">
+                <i class="fas fa-users"></i> Players
+            </h3>
+            <div id="playersList" class="flex flex-col gap-2">
+                <!-- Players will be added here -->
+            </div>
+        </section>
+
+        <!-- Target Score -->
+        <div class="bg-accent-bg border border-border rounded-lg p-2.5 mb-3 flex items-center justify-center">
+            <label for="targetScoreSelect" class="text-text-secondary text-sm mr-2 flex items-center gap-1">
+                <i class="fas fa-bullseye"></i> Target Score:
+            </label>
+            <select id="targetScoreSelect" 
+                    class="bg-secondary-bg text-text-primary border border-border rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-custom-blue">
+                <option value="100">100 Points</option>
+                <option value="150" selected>150 Points</option>
+                <option value="200">200 Points</option>
+                <option value="250">250 Points</option>
+            </select>
+        </div>
+
+        <!-- Current Player -->
+        <section class="bg-accent-bg border border-border rounded-xl p-3 mb-3 text-center relative overflow-hidden">
+            <div class="text-text-secondary text-sm mb-1 flex items-center justify-center gap-1">
+                <i class="fas fa-user"></i> Current Player
+            </div>
+            <div id="currentPlayerName" class="text-lg font-bold text-custom-green mb-2 overflow-hidden text-ellipsis whitespace-nowrap px-1 flex items-center justify-center gap-2">
+                🎱 Select player
+            </div>
+            <div id="currentPlayerScore" class="text-3xl md:text-4xl font-bold text-custom-green mb-2 text-shadow-lg">
+                0
+            </div>
+            <div id="currentPlayerRemaining" class="text-base text-custom-yellow font-bold flex items-center justify-center gap-1"></div>
+        </section>
+
+        <!-- Balls Grid -->
+        <section class="bg-secondary-bg border border-border rounded-xl p-3 mb-3">
+            <h3 class="text-base font-medium text-text-primary mb-2.5 flex items-center gap-1.5">
+                <i class="fas fa-futbol"></i> 🎱 Scoring
+            </h3>
+            <div id="ballsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                <!-- Balls will be added here -->
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <button id="subtractBtn" 
+                    class="bg-gradient-to-br from-custom-red to-red-700 text-white font-semibold rounded-lg py-3 flex items-center justify-center gap-1.5 shadow-lg shadow-red-900/20 active:scale-95 transition-transform">
+                <i class="fas fa-minus"></i> 🔄 Subtract Mode
+            </button>
+            <button id="undoBtn" 
+                    class="bg-gradient-to-br from-amber-500 to-amber-700 text-white font-semibold rounded-lg py-3 flex items-center justify-center gap-1.5 shadow-lg shadow-amber-900/20 active:scale-95 transition-transform">
+                <i class="fas fa-undo"></i> ↩️ Undo
+            </button>
+            <button id="nextPlayerBtn" 
+                    class="bg-gradient-to-br from-custom-green to-green-600 text-white font-semibold rounded-lg py-3 flex items-center justify-center gap-1.5 shadow-lg shadow-green-900/20 active:scale-95 transition-transform">
+                <i class="fas fa-user-circle"></i> ⏭️ Next Player
+            </button>
+            <button id="resetBtn" 
+                    class="bg-gradient-to-br from-custom-blue to-blue-600 text-white font-semibold rounded-lg py-3 flex items-center justify-center gap-1.5 shadow-lg shadow-blue-900/20 active:scale-95 transition-transform">
+                <i class="fas fa-redo"></i> 🆕 New Game
+            </button>
+        </div>
+
+        <!-- Game Over Section -->
+        <div id="gameOverSection" class="hidden"></div>
+
+        <!-- History -->
+        <section class="bg-secondary-bg border border-border rounded-xl p-3 mb-3 max-h-48 overflow-y-auto custom-scrollbar">
+            <h3 class="text-base font-medium text-text-primary mb-2.5 flex items-center gap-1.5">
+                <i class="fas fa-history"></i> 📜 History
+            </h3>
+            <div id="historyList" class="flex flex-col gap-1.5">
+                <div class="text-center py-5 text-text-secondary italic text-sm flex flex-col items-center gap-2">
+                    <i class="fas fa-clock text-lg"></i>
+                    No actions yet
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center pt-3 border-t border-border text-text-secondary text-xs">
+            <div class="flex justify-center flex-wrap gap-2 my-1">
+                <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5"> Yellow (2)</div>
+                <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5"> Green (3)</div>
+                <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5"> Brown (4)</div>
+                <div class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5"> Blue (5)</div>
+                <div class="flex items-center gap=1 px-1.5 py=0.5 rounded bg-white/5"> Pink (6)</div>
+                <div class="flex items-center gap=1 px=1.5 py=0.5 rounded bg-white/5"> Black (7)</div>
+                <div class="flex items-center gap=1 px=1.5 py=0.5 rounded bg-white/5"> Red (10)</div>
+            </div>
+            <p class="mt-1 text-custom-yellow flex items-center justify-center gap-1">
+                <i class="fas fa-info-circle"></i> Remaining score shows based on target: 20% of target score
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const gameState = {
+            players: [],
+            currentPlayerIndex: -1,
+            history: [],
+            scoringMode: 'add',
+            targetScore: 150,
+            winner: null,
+            completedPlayers: [],
+            isSubtractMode: false,
+            balls: [
+                { name: "Yellow", points: 2, color: "var(--yellow)", bg: "#ffdd00", emoji: "🟡" },
+                { name: "Green", points: 3, color: "var(--green)", bg: "#33ff77", emoji: "🟢" },
+                { name: "Brown", points: 4, color: "var(--brown)", bg: "#d2691e", emoji: "🟤" },
+                { name: "Blue", points: 5, color: "var(--blue)", bg: "#4d9fff", emoji: "🔵" },
+                { name: "Pink", points: 6, color: "var(--pink)", bg: "#ff66cc", emoji: "🌸" },
+                { name: "Black", points: 7, color: "var(--black)", bg: "#222222", emoji: "⚫" },
+                { name: "Red", points: 10, color: "var(--red)", bg: "#ff5555", emoji: "🔴" }
+            ]
+        };
+
+        // DOM Elements
+        const playerNameInput = document.getElementById('playerNameInput');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const playersList = document.getElementById('playersList');
+        const ballsGrid = document.getElementById('ballsGrid');
+        const historyList = document.getElementById('historyList');
+        const subtractBtn = document.getElementById('subtractBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const nextPlayerBtn = document.getElementById('nextPlayerBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const currentPlayerName = document.getElementById('currentPlayerName');
+        const currentPlayerScore = document.getElementById('currentPlayerScore');
+        const currentPlayerRemaining = document.getElementById('currentPlayerRemaining');
+        const targetScoreSelect = document.getElementById('targetScoreSelect');
+        const gameOverSection = document.getElementById('gameOverSection');
+
+        // Local Storage Functions
+        function saveState() {
+            try {
+                const stateToSave = {
+                    players: gameState.players,
+                    currentPlayerIndex: gameState.currentPlayerIndex,
+                    history: gameState.history,
+                    targetScore: gameState.targetScore,
+                    isSubtractMode: gameState.isSubtractMode,
+                    completedPlayers: gameState.completedPlayers,
+                    winner: gameState.winner,
+                    timestamp: new Date().getTime()
+                };
+                localStorage.setItem('snookerGameState', JSON.stringify(stateToSave));
+                console.log('Game state saved');
+            } catch (error) {
+                console.error('Error saving to local storage:', error);
+            }
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('snookerGameState');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    
+                    // Check if the saved state is less than 24 hours old (optional)
+                    const now = new Date().getTime();
+                    const oneDay = 24 * 60 * 60 * 1000;
+                    
+                    if (now - parsed.timestamp < oneDay) {
+                        gameState.players = parsed.players || [];
+                        gameState.currentPlayerIndex = parsed.currentPlayerIndex || -1;
+                        gameState.history = parsed.history || [];
+                        gameState.targetScore = parsed.targetScore || 150;
+                        gameState.isSubtractMode = parsed.isSubtractMode || false;
+                        gameState.completedPlayers = parsed.completedPlayers || [];
+                        gameState.winner = parsed.winner || null;
+                        
+                        // Update UI elements
+                        targetScoreSelect.value = gameState.targetScore;
+                        
+                        if (gameState.isSubtractMode) {
+                            subtractBtn.classList.add('active', 'ring-2', 'ring-white/30');
+                            subtractBtn.innerHTML = '<i class="fas fa-minus"></i> 🔴 Subtract Mode (ON)';
+                        }
+                        
+                        return true;
+                    } else {
+                        console.log('Saved state is older than 24 hours, starting fresh');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading from local storage:', error);
+            }
+            return false;
+        }
+
+        function init() {
+            // Try to load saved state
+            const loaded = loadState();
+            
+            renderPlayers();
+            renderBalls();
+            updateCurrentPlayerDisplay();
+            
+            if (loaded) {
+                // Add a history entry for loaded game
+                const historyEntry = {
+                    type: 'game_loaded',
+                    timestamp: new Date().getTime()
+                };
+                gameState.history.push(historyEntry);
+                renderHistory();
+                console.log('Game state loaded from local storage');
+            }
+            
+            // Set up auto-save on state changes
+            setupAutoSave();
+        }
+
+        function setupAutoSave() {
+            // Save on various events
+            const saveTriggers = [
+                'addPlayer',
+                'removePlayer',
+                'scoreBall',
+                'toggleSubtractMode',
+                'undoLast',
+                'nextPlayer',
+                'resetAll',
+                'checkScoreCompletion'
+            ];
+            
+            // Override state-changing functions to auto-save
+            const originalAddPlayer = addPlayer;
+            addPlayer = function(name) {
+                originalAddPlayer(name);
+                saveState();
+            };
+            
+            // We'll call saveState at the end of each state-changing function
+            // This is already done in the event handlers
+        }
+
+        function addPlayer(name) {
+            if (!name.trim() || gameState.players.length >= 12) {
+                if (gameState.players.length >= 12) {
+                    alert('❌ Maximum 12 players allowed!');
+                }
+                return;
+            }
+            
+            const player = {
+                id: Date.now(),
+                name: name.trim(),
+                score: 0,
+                isCompleted: false,
+                isWinner: false
+            };
+            
+            gameState.players.push(player);
+            
+            if (gameState.currentPlayerIndex === -1) {
+                gameState.currentPlayerIndex = 0;
+            }
+            
+            renderPlayers();
+            updateCurrentPlayerDisplay();
+            
+            // Add history entry
+            const historyEntry = {
+                type: 'add_player',
+                playerName: player.name,
+                timestamp: new Date().getTime()
+            };
+            gameState.history.push(historyEntry);
+            renderHistory();
+            
+            playerNameInput.value = '';
+            playerNameInput.focus();
+            
+            saveState();
+        }
+
+        function removePlayer(id) {
+            const index = gameState.players.findIndex(p => p.id === id);
+            if (index === -1) return;
+            
+            const playerName = gameState.players[index].name;
+            gameState.players.splice(index, 1);
+            
+            if (gameState.players.length === 0) {
+                gameState.currentPlayerIndex = -1;
+            } else if (gameState.currentPlayerIndex >= index && gameState.currentPlayerIndex > 0) {
+                gameState.currentPlayerIndex--;
+            }
+            
+            renderPlayers();
+            updateCurrentPlayerDisplay();
+            
+            // Add history entry
+            const historyEntry = {
+                type: 'remove_player',
+                playerName: playerName,
+                timestamp: new Date().getTime()
+            };
+            gameState.history.push(historyEntry);
+            renderHistory();
+            
+            saveState();
+        }
+
+        function setCurrentPlayer(id) {
+            const index = gameState.players.findIndex(p => p.id === id);
+            if (index !== -1 && !gameState.players[index].isCompleted) {
+                gameState.currentPlayerIndex = index;
+                renderPlayers();
+                updateCurrentPlayerDisplay();
+                saveState();
+            }
+        }
+
+        function renderPlayers() {
+            playersList.innerHTML = '';
+            
+            if (gameState.players.length === 0) {
+                playersList.innerHTML = `
+                    <div class="text-center py-5 text-text-secondary italic flex flex-col items-center gap-2">
+                        <i class="fas fa-user-plus text-xl"></i>
+                        No players yet. Add players to start.
+                    </div>
+                `;
+                return;
+            }
+            
+            gameState.players.forEach((player, index) => {
+                const playerCard = document.createElement('div');
+                let cardClasses = 'bg-accent-bg border border-border rounded-lg p-2.5 transition-all duration-200 relative flex items-center justify-between min-h-[65px]';
+                
+                if (index === gameState.currentPlayerIndex && !player.isCompleted) {
+                    cardClasses += ' border-custom-green shadow-[0_0_0_1px_#33ff77,0_3px_10px_rgba(51,255,119,0.2)]';
+                }
+                if (player.isWinner) {
+                    cardClasses += ' border-yellow-400 shadow-[0_0_0_2px_gold,0_5px_15px_rgba(255,215,0,0.3)] bg-gradient-to-br from-accent-bg to-yellow-400/10';
+                }
+                if (player.isCompleted) {
+                    cardClasses += ' border-custom-blue opacity-80 bg-gradient-to-br from-accent-bg to-custom-blue/10';
+                }
+                
+                playerCard.className = cardClasses;
+                playerCard.onclick = () => setCurrentPlayer(player.id);
+                
+                // Calculate remaining score based on target score
+                const remaining = gameState.targetScore - player.score;
+                // Calculate threshold based on target score (20% of target)
+                const threshold = Math.floor(gameState.targetScore * 0.2);
+                const showRemaining = remaining <= threshold && remaining > 0 && !player.isCompleted && !player.isWinner;
+                
+                // Determine status text and emoji
+                let statusText = '';
+                let statusEmoji = '';
+                
+                if (index === gameState.currentPlayerIndex && !player.isCompleted) {
+                    statusText = 'Current';
+                    statusEmoji = '🎱';
+                } else if (player.isWinner) {
+                    statusText = 'WINNER!';
+                    statusEmoji = '🏆';
+                } else if (player.isCompleted) {
+                    statusText = 'Completed';
+                    statusEmoji = '✅';
+                } else {
+                    statusText = 'Tap to select';
+                    statusEmoji = '👆';
+                }
+                
+                playerCard.innerHTML = `
+                    <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-custom-blue to-custom-purple flex items-center justify-center font-bold border border-white/20 flex-shrink-0">
+                            ${player.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-sm truncate flex items-center gap-1">
+                                <i class="fas fa-user text-xs"></i> ${player.name}
+                            </div>
+                            <div class="text-text-secondary text-xs flex items-center gap-1">
+                                ${statusEmoji} ${statusText}
+                            </div>
+                            ${showRemaining ? `
+                                <div class="text-custom-yellow bg-custom-yellow/15 px-2 py-1 rounded text-xs font-bold mt-1 inline-flex items-center gap-1 border border-custom-yellow/20">
+                                    <i class="fas fa-hourglass-half"></i> ${remaining} points left
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="text-custom-green text-xl font-bold min-w-[50px] text-right pl-2 text-shadow">
+                        ${player.score}
+                    </div>
+                    ${!player.isWinner && !player.isCompleted ? `
+                        <button class="bg-red-500/10 border border-red-500/30 text-custom-red text-sm rounded p-1.5 ml-1 flex-shrink-0 w-8 h-8 flex items-center justify-center" 
+                                onclick="event.stopPropagation(); removePlayer(${player.id})" 
+                                title="Remove player">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : ''}
+                    ${player.isCompleted ? '<div class="absolute top-1.5 right-1.5">🏆</div>' : ''}
+                `;
+                
+                playersList.appendChild(playerCard);
+            });
+        }
+
+        function renderBalls() {
+            ballsGrid.innerHTML = '';
+            
+            gameState.balls.forEach(ball => {
+                const ballBtn = document.createElement('button');
+                ballBtn.className = 'ball-btn aspect-square rounded-full border-2 flex flex-col items-center justify-center cursor-pointer transition-all active:scale-95 relative overflow-hidden shadow-[0_4px_8px_rgba(0,0,0,0.3),inset_0_-5px_10px_rgba(0,0,0,0.2)]';
+                ballBtn.style.background = `radial-gradient(circle at 30% 30%, ${ball.bg}, ${darkenColor(ball.bg, 20)})`;
+                ballBtn.style.borderColor = ball.color;
+                
+                ballBtn.innerHTML = `
+                    <div class="text-white font-bold text-lg text-shadow z-10">${ball.points}</div>
+                    <div class="text-white text-xs text-shadow mt-1 z-10 flex items-center gap-0.5">${ball.emoji} ${ball.name}</div>
+                `;
+                
+                ballBtn.onclick = () => scoreBall(ball);
+                ballsGrid.appendChild(ballBtn);
+            });
+        }
+
+        function scoreBall(ball) {
+            if (gameState.currentPlayerIndex === -1) {
+                alert('⚠️ Please select a player first!');
+                return;
+            }
+            
+            const player = gameState.players[gameState.currentPlayerIndex];
+            
+            if (player.isCompleted || player.isWinner) {
+                alert('✅ This player has completed the game!');
+                return;
+            }
+            
+            // Check if we're in subtract mode
+            const isSubtract = gameState.isSubtractMode;
+            const points = isSubtract ? -ball.points : ball.points;
+            player.score += points;
+            
+            // Save action to history
+            const historyEntry = {
+                type: isSubtract ? 'subtract' : 'score',
+                playerId: player.id,
+                playerName: player.name,
+                points: points,
+                ball: ball.name,
+                ballEmoji: ball.emoji,
+                timestamp: new Date().getTime()
+            };
+            
+            gameState.history.push(historyEntry);
+            
+            renderPlayers();
+            updateCurrentPlayerDisplay();
+            
+            currentPlayerScore.classList.add('score-flash');
+            setTimeout(() => currentPlayerScore.classList.remove('score-flash'), 400);
+            
+            // Check if player has completed the target score
+            checkScoreCompletion();
+            
+            renderHistory();
+            saveState();
+        }
+
+        function toggleSubtractMode() {
+            gameState.isSubtractMode = !gameState.isSubtractMode;
+            
+            if (gameState.isSubtractMode) {
+                subtractBtn.classList.add('active', 'ring-2', 'ring-white/30');
+                subtractBtn.innerHTML = '<i class="fas fa-minus"></i> 🔴 Subtract Mode (ON)';
+            } else {
+                subtractBtn.classList.remove('active', 'ring-2', 'ring-white/30');
+                subtractBtn.innerHTML = '<i class="fas fa-minus"></i> 🔄 Subtract Mode';
+            }
+            
+            saveState();
+        }
+
+        function undoLast() {
+            if (gameState.history.length === 0) return;
+            
+            const lastAction = gameState.history.pop();
+            
+            if (lastAction.type === 'score' || lastAction.type === 'subtract') {
+                const playerIndex = gameState.players.findIndex(p => p.id === lastAction.playerId);
+                if (playerIndex !== -1) {
+                    gameState.players[playerIndex].score -= lastAction.points;
+                    
+                    if (gameState.players[playerIndex].isCompleted) {
+                        gameState.players[playerIndex].isCompleted = false;
+                    }
+                    
+                    gameState.currentPlayerIndex = playerIndex;
+                }
+            } 
+            else if (lastAction.type === 'completion') {
+                const playerIndex = gameState.players.findIndex(p => p.name === lastAction.playerName);
+                if (playerIndex !== -1) {
+                    gameState.players[playerIndex].isCompleted = false;
+                    gameState.currentPlayerIndex = playerIndex;
+                }
+            }
+            else if (lastAction.type === 'add_player' || lastAction.type === 'remove_player') {
+                // For these, just remove from history without changing state
+                // User can use remove player button
+            }
+            
+            renderPlayers();
+            updateCurrentPlayerDisplay();
+            renderHistory();
+            gameOverSection.style.display = 'none';
+            
+            saveState();
+        }
+
+        function nextActivePlayer() {
+            if (gameState.players.length === 0) return;
+            
+            let attempts = 0;
+            let nextIndex = gameState.currentPlayerIndex;
+            
+            do {
+                nextIndex = (nextIndex + 1) % gameState.players.length;
+                attempts++;
+            } while (gameState.players[nextIndex].isCompleted && attempts < gameState.players.length * 2);
+            
+            if (!gameState.players[nextIndex].isCompleted) {
+                gameState.currentPlayerIndex = nextIndex;
+                renderPlayers();
+                updateCurrentPlayerDisplay();
+                saveState();
+            }
+        }
+
+        function nextPlayer() {
+            nextActivePlayer();
+        }
+
+        function checkScoreCompletion() {
+            const targetScore = parseInt(targetScoreSelect.value);
+            gameState.targetScore = targetScore;
+            
+            const activePlayers = gameState.players.filter(p => !p.isCompleted);
+            
+            let newCompletedPlayers = [];
+            
+            activePlayers.forEach(player => {
+                if (player.score >= targetScore && !player.isCompleted) {
+                    player.isCompleted = true;
+                    gameState.completedPlayers.push(player);
+                    newCompletedPlayers.push(player);
+                    
+                    const completionEntry = {
+                        type: 'completion',
+                        playerName: player.name,
+                        score: player.score,
+                        timestamp: new Date().getTime()
+                    };
+                    gameState.history.push(completionEntry);
+                    
+                    if (gameState.players[gameState.currentPlayerIndex].id === player.id) {
+                        nextActivePlayer();
+                    }
+                }
+            });
+            
+            renderPlayers();
+            updateCurrentPlayerDisplay();
+            renderHistory();
+            saveState();
+        }
+
+        function updateCurrentPlayerDisplay() {
+            if (gameState.currentPlayerIndex >= 0 && gameState.players.length > 0) {
+                const player = gameState.players[gameState.currentPlayerIndex];
+                currentPlayerName.innerHTML = `<i class="fas fa-user"></i> 🎱 ${player.name}`;
+                currentPlayerScore.textContent = player.score;
+                
+                // Calculate threshold based on target score (20% of target)
+                const threshold = Math.floor(gameState.targetScore * 0.2);
+                const remaining = gameState.targetScore - player.score;
+                
+                if (remaining <= threshold && remaining > 0 && !player.isCompleted) {
+                    currentPlayerRemaining.innerHTML = `<i class="fas fa-hourglass-half"></i> ${remaining} points left to target`;
+                    currentPlayerRemaining.classList.remove('hidden');
+                    currentPlayerRemaining.classList.add('flex');
+                } else {
+                    currentPlayerRemaining.textContent = '';
+                    currentPlayerRemaining.classList.add('hidden');
+                }
+            } else {
+                currentPlayerName.innerHTML = '<i class="fas fa-user"></i> 🎱 Select player';
+                currentPlayerScore.textContent = '0';
+                currentPlayerRemaining.textContent = '';
+                currentPlayerRemaining.classList.add('hidden');
+            }
+        }
+
+        function resetAll() {
+            const newGame = confirm('🆕 Start a new game? Current scores will be reset.');
+            if (!newGame) return;
+            
+            gameState.players.forEach(p => {
+                p.score = 0;
+                p.isCompleted = false;
+                p.isWinner = false;
+            });
+            
+            gameState.currentPlayerIndex = gameState.players.length > 0 ? 0 : -1;
+            gameState.history = [];
+            gameState.winner = null;
+            gameState.completedPlayers = [];
+            gameState.isSubtractMode = false;
+            
+            subtractBtn.classList.remove('active', 'ring-2', 'ring-white/30');
+            subtractBtn.innerHTML = '<i class="fas fa-minus"></i> 🔄 Subtract Mode';
+            
+            renderPlayers();
+            updateCurrentPlayerDisplay();
+            renderHistory();
+            gameOverSection.classList.add('hidden');
+            
+            const newGameEntry = {
+                type: 'new_game',
+                timestamp: new Date().getTime()
+            };
+            gameState.history.push(newGameEntry);
+            renderHistory();
+            
+            // Clear local storage on new game
+            localStorage.removeItem('snookerGameState');
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            
+            if (gameState.history.length === 0) {
+                historyList.innerHTML = `
+                    <div class="text-center py-5 text-text-secondary italic flex flex-col items-center gap-2">
+                        <i class="fas fa-clock text-xl"></i>
+                        No actions yet
+                    </div>
+                `;
+                return;
+            }
+            
+            [...gameState.history].reverse().forEach(entry => {
+                const item = document.createElement('div');
+                item.className = 'bg-accent-bg p-2 rounded border-l-4 flex justify-between items-center text-sm min-h-[40px] transition-all hover:translate-x-0.5 hover:shadow';
+                
+                let borderColor = '#22c55e';
+                let displayAction = '';
+                let displayPlayer = '';
+                let displayPoints = 0;
+                let emoji = '';
+                
+                switch(entry.type) {
+                    case 'score':
+                        displayPlayer = entry.playerName;
+                        displayAction = `${entry.ballEmoji || ''} scored ${entry.ball}`;
+                        displayPoints = entry.points;
+                        emoji = entry.ballEmoji || '🎱';
+                        if (entry.ball === 'Yellow') borderColor = '#ffdd00';
+                        else if (entry.ball === 'Green') borderColor = '#33ff77';
+                        else if (entry.ball === 'Brown') borderColor = '#d2691e';
+                        else if (entry.ball === 'Blue') borderColor = '#4d9fff';
+                        else if (entry.ball === 'Pink') borderColor = '#ff66cc';
+                        else if (entry.ball === 'Black') borderColor = '#222222';
+                        else if (entry.ball === 'Red') borderColor = '#ff5555';
+                        break;
+                        
+                    case 'subtract':
+                        displayPlayer = entry.playerName;
+                        displayAction = `${entry.ballEmoji || ''} subtracted ${entry.ball}`;
+                        displayPoints = entry.points;
+                        emoji = '➖';
+                        borderColor = '#ff5555';
+                        break;
+                        
+                    case 'completion':
+                        displayPlayer = entry.playerName;
+                        displayAction = 'target reached 🎯';
+                        displayPoints = entry.score;
+                        emoji = '🏆';
+                        borderColor = '#4d9fff';
+                        break;
+                        
+                    case 'add_player':
+                        displayPlayer = 'System';
+                        displayAction = `Added player ${entry.playerName}`;
+                        displayPoints = 0;
+                        emoji = '➕';
+                        borderColor = '#4d9fff';
+                        break;
+                        
+                    case 'remove_player':
+                        displayPlayer = 'System';
+                        displayAction = `Removed player ${entry.playerName}`;
+                        displayPoints = 0;
+                        emoji = '➖';
+                        borderColor = '#ff5555';
+                        break;
+                        
+                    case 'new_game':
+                        displayPlayer = 'System';
+                        displayAction = 'New game started';
+                        displayPoints = 0;
+                        emoji = '🆕';
+                        borderColor = '#33ff77';
+                        break;
+                        
+                    case 'game_loaded':
+                        displayPlayer = 'System';
+                        displayAction = 'Game loaded from save';
+                        displayPoints = 0;
+                        emoji = '💾';
+                        borderColor = '#aa66ff';
+                        break;
+                        
+                    default:
+                        displayPlayer = 'System';
+                        displayAction = entry.type || 'Action';
+                        displayPoints = entry.points || 0;
+                        emoji = '⚡';
+                }
+                
+                item.style.borderLeftColor = borderColor;
+                
+                item.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-text-primary text-sm truncate flex items-center gap-1">
+                            ${emoji} ${displayPlayer}
+                        </div>
+                        <div class="text-text-secondary text-xs truncate flex items-center gap-1">
+                            <i class="fas fa-clock"></i> ${displayAction}
+                        </div>
+                    </div>
+                    <div class="font-bold text-sm min-w-[40px] text-right pl-1.5 flex items-center justify-center gap-1 ${displayPoints > 0 ? 'text-custom-green' : displayPoints < 0 ? 'text-custom-red' : ''}">
+                        ${displayPoints > 0 ? '+' : ''}${displayPoints !== 0 ? displayPoints : ''}
+                    </div>
+                `;
+                
+                historyList.appendChild(item);
+            });
+        }
+
+        function darkenColor(color, percent) {
+            let r = parseInt(color.slice(1, 3), 16);
+            let g = parseInt(color.slice(3, 5), 16);
+            let b = parseInt(color.slice(5, 7), 16);
+            
+            r = Math.floor(r * (100 - percent) / 100);
+            g = Math.floor(g * (100 - percent) / 100);
+            b = Math.floor(b * (100 - percent) / 100);
+            
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+
+        // Event Listeners
+        addPlayerBtn.addEventListener('click', () => addPlayer(playerNameInput.value));
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addPlayer(playerNameInput.value);
+        });
+        
+        subtractBtn.addEventListener('click', toggleSubtractMode);
+        undoBtn.addEventListener('click', undoLast);
+        nextPlayerBtn.addEventListener('click', nextPlayer);
+        resetBtn.addEventListener('click', resetAll);
+        
+        targetScoreSelect.addEventListener('change', () => {
+            gameState.targetScore = parseInt(targetScoreSelect.value);
+            checkScoreCompletion();
+            updateCurrentPlayerDisplay();
+            renderPlayers();
+            saveState();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '7') {
+                const index = parseInt(e.key) - 1;
+                if (index < gameState.balls.length) scoreBall(gameState.balls[index]);
+            }
+            
+            if (e.key === 's' || e.key === 'S') {
+                toggleSubtractMode();
+                e.preventDefault();
+            }
+            
+            if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                undoLast();
+                e.preventDefault();
+            }
+            
+            if (e.key === 'n' || e.key === 'N') {
+                nextPlayer();
+                e.preventDefault();
+            }
+            
+            if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+                resetAll();
+                e.preventDefault();
+            }
+        });
+
+        // Initialize
+        init();
+        
+        // Save state before page unload
+        window.addEventListener('beforeunload', () => {
+            saveState();
+        });
+        
+        // Save state periodically (every 30 seconds) as backup
+        setInterval(() => {
+            saveState();
+        }, 30000);
+    </script>
+</body>
+</html>

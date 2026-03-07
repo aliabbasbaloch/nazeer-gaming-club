@@ -1,0 +1,56 @@
+import 'package:hive/hive.dart';
+
+part 'player.g.dart';
+
+@HiveType(typeId: 0)
+class Player extends HiveObject {
+  @HiveField(0)
+  final String id;
+  
+  @HiveField(1)
+  String name;
+  
+  @HiveField(2)
+  int score;
+  
+  @HiveField(3)
+  bool isCompleted;
+  
+  @HiveField(4)
+  int turnCount;
+  
+  @HiveField(5)
+  DateTime createdAt;
+  
+  Player({
+    required this.id,
+    required this.name,
+    this.score = 0,
+    this.isCompleted = false,
+    this.turnCount = 0,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+  
+  Player copyWith({
+    String? id,
+    String? name,
+    int? score,
+    bool? isCompleted,
+    int? turnCount,
+    DateTime? createdAt,
+  }) {
+    return Player(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      score: score ?? this.score,
+      isCompleted: isCompleted ?? this.isCompleted,
+      turnCount: turnCount ?? this.turnCount,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+  
+  @override
+  String toString() {
+    return 'Player(id: $id, name: $name, score: $score, isCompleted: $isCompleted)';
+  }
+}
