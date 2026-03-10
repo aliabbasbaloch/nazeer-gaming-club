@@ -127,6 +127,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  void _showPersonalTargetSheet(
+      BuildContext context, WidgetRef ref, Player player, int globalTarget) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.of(context).bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _PersonalTargetSheet(
+        player: player,
+        globalTarget: globalTarget,
+        onSet: (target) {
+          ref.read(gameProvider.notifier).setPlayerTarget(player.id, target);
+          Navigator.pop(context);
+        },
+        onReset: () {
+          ref.read(gameProvider.notifier).setPlayerTarget(player.id, null);
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+
   bool _listsEqual(List<Player> a, List<Player> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
@@ -216,6 +239,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 canAdd: (game?.players.length ?? 0) < AppConstants.maxPlayers,
                 onAdd: () => _addPlayer(game),
               ),
+              if (game != null) ...[
+                const SizedBox(height: 12),
+                _GlobalTargetChip(game: game),
+              ],
               const SizedBox(height: 20),
               const _SectionHeader(label: 'Players'),
               const SizedBox(height: 8),
@@ -245,6 +272,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       },
                       onRemove: () =>
                           _showRemoveDialog(player.id, player.name),
+                      onEditTarget: player.isCompleted
+                          ? null
+                          : () => _showPersonalTargetSheet(
+                                context, ref, player, game.targetScore),
                     );
                   },
                 ),
@@ -411,6 +442,7 @@ class _PlayerListItem extends StatelessWidget {
   final int rank;
   final VoidCallback onTap;
   final VoidCallback onRemove;
+  final VoidCallback? onEditTarget;
 
   const _PlayerListItem({
     required this.player,
@@ -420,6 +452,7 @@ class _PlayerListItem extends StatelessWidget {
     this.rank = 1,
     required this.onTap,
     required this.onRemove,
+    this.onEditTarget,
   });
 
   @override
@@ -491,15 +524,39 @@ class _PlayerListItem extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Text(
-                          player.name,
-                          style: TextStyle(
-                            fontSize: isActive ? 16 : 15,
-                            fontWeight: isActive
-                                ? FontWeight.w700
-                                : FontWeight.w600,
-                            color: colors.textPrimary,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              player.name,
+                              style: TextStyle(
+                                fontSize: isActive ? 16 : 15,
+                                fontWeight: isActive
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                            if (player.personalTarget != null)
+                              Container(
+                                margin: const EdgeInsets.only(top: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: colors.accent.withValues(alpha: 0.12),
+                                  border: Border.all(color: colors.accent.withValues(alpha: 0.3)),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.tune, size: 10, color: colors.accent),
+                                    Text(' ${player.personalTarget} pts',
+                                      style: TextStyle(fontSize: 10, color: colors.accent, fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -539,6 +596,15 @@ class _PlayerListItem extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (!isActive && !player.isCompleted && onEditTarget != null)
+                    GestureDetector(
+                      onTap: onEditTarget,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Icon(Icons.tune,
+                            color: colors.textMuted, size: 16),
+                      ),
+                    ),
                   if (!isActive && !player.isCompleted)
                     GestureDetector(
                       onTap: onRemove,
@@ -711,12 +777,20 @@ class _CurrentPlayerCardState extends State<_CurrentPlayerCard> {
                   ),
                 ),
                 if (game != null)
+                  Text(
+                    '/ ${player.effectiveTarget(game.targetScore)} target',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.textMuted,
+                      fontFamily: 'Syne',
+                    ),
+                  ),
+                if (game != null)
                   Builder(builder: (_) {
-                    final remaining = game.targetScore - player.score;
-                    final show = remaining > 0 &&
-                        remaining <=
-                            (game.targetScore *
-                                AppConstants.warningThreshold);
+                    final effective = player.effectiveTarget(game.targetScore);
+                    final remaining = effective - player.score;
+                    final threshold = (effective * 0.2).floor();
+                    final show = remaining <= threshold && remaining > 0 && !player.isCompleted;
                     if (!show) return const SizedBox.shrink();
                     return Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -1181,6 +1255,435 @@ class _ActionBtnState extends State<_ActionBtn> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Global Target Chip
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GlobalTargetChip extends ConsumerWidget {
+  final Game game;
+  const _GlobalTargetChip({required this.game});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
+    return Center(
+      child: GestureDetector(
+        onTap: () => _showChangeTargetSheet(context, ref),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: colors.bgElevated,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.flag, color: colors.accent, size: 16),
+              const SizedBox(width: 6),
+              Text('Target: ', style: TextStyle(color: colors.textMuted, fontSize: 13)),
+              Text('${game.targetScore} pts',
+                style: TextStyle(
+                  color: colors.accent,
+                  fontFamily: 'Syne',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                )),
+              const SizedBox(width: 4),
+              Icon(Icons.edit, color: colors.textMuted, size: 14),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showChangeTargetSheet(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.bgCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ChangeTargetSheet(
+        currentTarget: game.targetScore,
+        players: game.players,
+        onChanged: (newTarget) {
+          ref.read(gameProvider.notifier).updateGlobalTarget(newTarget);
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Change Global Target Sheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChangeTargetSheet extends StatefulWidget {
+  final int currentTarget;
+  final List<Player> players;
+  final ValueChanged<int> onChanged;
+
+  const _ChangeTargetSheet({
+    required this.currentTarget,
+    required this.players,
+    required this.onChanged,
+  });
+
+  @override
+  State<_ChangeTargetSheet> createState() => _ChangeTargetSheetState();
+}
+
+class _ChangeTargetSheetState extends State<_ChangeTargetSheet> {
+  late int _selected;
+  final _customController = TextEditingController();
+  bool _useCustom = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentTarget;
+  }
+
+  @override
+  void dispose() {
+    _customController.dispose();
+    super.dispose();
+  }
+
+  int get _affectedCount {
+    return widget.players.where((p) {
+      if (p.isCompleted) return false;
+      final effective = p.personalTarget ?? _selected;
+      return p.score >= effective;
+    }).length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Change Game Target',
+            style: TextStyle(fontFamily: 'Syne', fontWeight: FontWeight.w700,
+                fontSize: 18, color: colors.textPrimary)),
+          const SizedBox(height: 4),
+          Text('Affects all players without a personal target',
+            style: TextStyle(fontSize: 12, color: colors.textMuted)),
+          const SizedBox(height: 16),
+          Row(
+            children: [100, 150, 200, 250].map((score) {
+              final isSelected = !_useCustom && _selected == score;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _selected = score;
+                      _useCustom = false;
+                      _customController.clear();
+                    }),
+                    child: Container(
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : colors.bgElevated,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : colors.border,
+                        ),
+                      ),
+                      child: Text('$score',
+                        style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : colors.textMuted,
+                        )),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _customController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: 'Custom target...',
+              hintStyle: TextStyle(color: colors.textMuted),
+              filled: true,
+              fillColor: colors.bgElevated,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            style: TextStyle(color: colors.textPrimary),
+            onChanged: (val) {
+              final n = int.tryParse(val);
+              if (n != null && n >= 10 && n <= 999) {
+                setState(() {
+                  _selected = n;
+                  _useCustom = true;
+                });
+              }
+            },
+          ),
+          if (_affectedCount > 0) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.warning_amber, color: AppColors.warning, size: 16),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text('$_affectedCount player(s) will be auto-completed with this target',
+                    style: const TextStyle(fontSize: 12, color: AppColors.warning)),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: TextStyle(color: colors.textMuted)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => widget.onChanged(_selected),
+                  child: Container(
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('Update Target',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Personal Target Sheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PersonalTargetSheet extends StatefulWidget {
+  final Player player;
+  final int globalTarget;
+  final ValueChanged<int?> onSet;
+  final VoidCallback onReset;
+
+  const _PersonalTargetSheet({
+    required this.player,
+    required this.globalTarget,
+    required this.onSet,
+    required this.onReset,
+  });
+
+  @override
+  State<_PersonalTargetSheet> createState() => _PersonalTargetSheetState();
+}
+
+class _PersonalTargetSheetState extends State<_PersonalTargetSheet> {
+  late int _selected;
+  final _customController = TextEditingController();
+  bool _useCustom = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.player.personalTarget ?? widget.globalTarget;
+  }
+
+  @override
+  void dispose() {
+    _customController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final hasPersonal = widget.player.personalTarget != null;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                ),
+                alignment: Alignment.center,
+                child: Text(widget.player.name[0].toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary)),
+              ),
+              const SizedBox(width: 10),
+              Text(widget.player.name,
+                style: TextStyle(fontFamily: 'Syne', fontWeight: FontWeight.w700,
+                    fontSize: 18, color: colors.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('Personal target overrides the game target for this player',
+            style: TextStyle(fontSize: 12, color: colors.textMuted)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: hasPersonal
+                  ? colors.accent.withValues(alpha: 0.12)
+                  : colors.bgElevated,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: hasPersonal
+                    ? colors.accent.withValues(alpha: 0.3)
+                    : colors.border,
+              ),
+            ),
+            child: Text(
+              hasPersonal
+                  ? 'Personal target: ${widget.player.personalTarget} pts'
+                  : 'Using game target: ${widget.globalTarget} pts',
+              style: TextStyle(
+                fontSize: 12,
+                color: hasPersonal ? colors.accent : colors.textMuted,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [100, 150, 200, 250].map((score) {
+              final isSelected = !_useCustom && _selected == score;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _selected = score;
+                      _useCustom = false;
+                      _customController.clear();
+                    }),
+                    child: Container(
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : colors.bgElevated,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : colors.border,
+                        ),
+                      ),
+                      child: Text('$score',
+                        style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : colors.textMuted,
+                        )),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _customController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: 'Custom target...',
+              hintStyle: TextStyle(color: colors.textMuted),
+              filled: true,
+              fillColor: colors.bgElevated,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            style: TextStyle(color: colors.textPrimary),
+            onChanged: (val) {
+              final n = int.tryParse(val);
+              if (n != null && n > widget.player.score && n <= 999) {
+                setState(() {
+                  _selected = n;
+                  _useCustom = true;
+                });
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              if (hasPersonal)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: widget.onReset,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.danger,
+                      side: BorderSide(color: colors.danger),
+                    ),
+                    child: const Text('Reset to Game Target'),
+                  ),
+                ),
+              if (hasPersonal) const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => widget.onSet(_selected),
+                  child: Container(
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('Set Target',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

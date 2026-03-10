@@ -22,14 +22,22 @@ class Player extends HiveObject {
   @HiveField(5)
   DateTime createdAt;
   
+  @HiveField(6)
+  int? personalTarget;
+  
   Player({
     required this.id,
     required this.name,
     this.score = 0,
     this.isCompleted = false,
     this.turnCount = 0,
+    this.personalTarget,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
+
+  int effectiveTarget(int globalTarget) {
+    return personalTarget ?? globalTarget;
+  }
   
   Player copyWith({
     String? id,
@@ -38,6 +46,8 @@ class Player extends HiveObject {
     bool? isCompleted,
     int? turnCount,
     DateTime? createdAt,
+    int? personalTarget,
+    bool clearPersonalTarget = false,
   }) {
     return Player(
       id: id ?? this.id,
@@ -46,6 +56,7 @@ class Player extends HiveObject {
       isCompleted: isCompleted ?? this.isCompleted,
       turnCount: turnCount ?? this.turnCount,
       createdAt: createdAt ?? this.createdAt,
+      personalTarget: clearPersonalTarget ? null : (personalTarget ?? this.personalTarget),
     );
   }
   

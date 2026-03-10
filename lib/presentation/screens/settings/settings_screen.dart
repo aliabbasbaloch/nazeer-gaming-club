@@ -143,15 +143,17 @@ class _DeveloperCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
+        gradient: colors.cardGradient,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.35),
+            color: AppColors.primary.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 6),
           )
@@ -159,13 +161,12 @@ class _DeveloperCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Circular logo
           Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(color: AppColors.primary, width: 2),
             ),
             child: ClipOval(
               child: Image.asset(
@@ -175,21 +176,21 @@ class _DeveloperCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             AppConstants.appName,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
+          Text(
             'by Ali Abbas',
             style: TextStyle(
               fontSize: 13,
               fontStyle: FontStyle.italic,
-              color: Colors.white,
+              color: colors.isDark ? colors.accent : AppColors.primary,
             ),
           ),
           const SizedBox(height: 4),
@@ -197,7 +198,7 @@ class _DeveloperCard extends StatelessWidget {
             'Version ${AppConstants.appVersion}',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: colors.textMuted,
             ),
           ),
         ],
@@ -225,7 +226,7 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
-          color: colors.textSecondary,
+          color: colors.accent,
         ),
       ),
     );
@@ -247,7 +248,8 @@ class _SettingsGroup extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border, width: 1),
         boxShadow: colors.cardShadow,
       ),
       child: Column(children: children),

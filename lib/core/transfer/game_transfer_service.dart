@@ -22,6 +22,7 @@ class GameTransferService {
                 score: p.score,
                 isCompleted: p.isCompleted,
                 turnCount: p.turnCount,
+                personalTarget: p.personalTarget,
               ))
           .toList(),
     );

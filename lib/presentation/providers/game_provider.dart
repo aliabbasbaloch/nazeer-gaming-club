@@ -196,7 +196,8 @@ class GameNotifier extends StateNotifier<Game?> {
     
     final pointsToAdd = currentGame.isSubtractMode ? -ball.points : ball.points;
     final newScore = (currentPlayer.score + pointsToAdd).clamp(-100, double.infinity).toInt();
-    final isCompleted = newScore >= currentGame.targetScore;
+    final effective = currentPlayer.effectiveTarget(currentGame.targetScore);
+    final isCompleted = newScore >= effective;
 
     // Save snapshot for undo before mutating
     _undoStack.add(currentGame);
@@ -234,7 +235,7 @@ class GameNotifier extends StateNotifier<Game?> {
         actionType: ActionType.playerCompleted,
         playerId: currentPlayer.id,
         playerName: currentPlayer.name,
-        details: 'Reached target of ${currentGame.targetScore}',
+        details: 'Reached target of $effective',
       );
     }
     
@@ -325,6 +326,7 @@ class GameNotifier extends StateNotifier<Game?> {
               score: tp.score,
               isCompleted: tp.isCompleted,
               turnCount: tp.turnCount,
+              personalTarget: tp.personalTarget,
             ))
         .toList();
 
@@ -355,5 +357,75 @@ class GameNotifier extends StateNotifier<Game?> {
 
     _undoStack.clear();
     state = newGame;
+  }
+
+  /// Update global target during game
+  Future<void> updateGlobalTarget(int newTarget) async {
+    if (state == null) return;
+
+    _undoStack.add(state!);
+    if (_undoStack.length > 20) _undoStack.removeAt(0);
+
+    final updatedPlayers = state!.players.map((p) {
+      final effective = p.effectiveTarget(newTarget);
+      if (!p.isCompleted && p.score >= effective) {
+        return p.copyWith(isCompleted: true);
+      }
+      return p;
+    }).toList();
+
+    final updatedGame = state!.copyWith(
+      targetScore: newTarget,
+      players: updatedPlayers,
+    );
+
+    await _repository.saveGame(updatedGame);
+    await _addHistoryAction(
+      gameId: updatedGame.id,
+      actionType: ActionType.gameReset,
+      details: 'Global target changed to $newTarget pts',
+    );
+
+    state = updatedGame;
+  }
+
+  /// Set or clear per-player personal target
+  Future<void> setPlayerTarget(String playerId, int? personalTarget) async {
+    if (state == null) return;
+
+    _undoStack.add(state!);
+    if (_undoStack.length > 20) _undoStack.removeAt(0);
+
+    final updatedPlayers = state!.players.map((p) {
+      if (p.id != playerId) return p;
+      final updated = personalTarget != null
+          ? p.copyWith(personalTarget: personalTarget)
+          : p.copyWith(clearPersonalTarget: true);
+      final effective = updated.effectiveTarget(state!.targetScore);
+      if (!updated.isCompleted && updated.score >= effective) {
+        return updated.copyWith(isCompleted: true);
+      }
+      return updated;
+    }).toList();
+
+    final updatedGame = state!.copyWith(players: updatedPlayers);
+    await _repository.saveGame(updatedGame);
+
+    final targetPlayer = updatedPlayers.firstWhere((p) => p.id == playerId);
+    await _addHistoryAction(
+      gameId: updatedGame.id,
+      actionType: ActionType.gameReset,
+      details: personalTarget != null
+          ? 'Personal target set to $personalTarget pts for ${targetPlayer.name}'
+          : 'Personal target removed for ${targetPlayer.name}',
+    );
+
+    state = updatedGame;
+
+    // Auto-advance if the current player just completed
+    if (playerId == updatedGame.currentPlayerId &&
+        targetPlayer.isCompleted) {
+      await nextPlayer();
+    }
   }
 }

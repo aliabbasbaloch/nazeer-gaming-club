@@ -3,12 +3,14 @@ class TransferPlayer {
   final int score;
   final bool isCompleted;
   final int turnCount;
+  final int? personalTarget;
 
   const TransferPlayer({
     required this.name,
     required this.score,
     required this.isCompleted,
     required this.turnCount,
+    this.personalTarget,
   });
 
   factory TransferPlayer.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class TransferPlayer {
       score: json['score'] as int,
       isCompleted: json['isCompleted'] as bool,
       turnCount: json['turnCount'] as int,
+      personalTarget: json['personalTarget'] as int?,
     );
   }
 
@@ -25,6 +28,7 @@ class TransferPlayer {
         'score': score,
         'isCompleted': isCompleted,
         'turnCount': turnCount,
+        if (personalTarget != null) 'personalTarget': personalTarget,
       };
 }
 
