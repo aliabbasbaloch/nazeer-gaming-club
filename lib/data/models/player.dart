@@ -24,6 +24,9 @@ class Player extends HiveObject {
   
   @HiveField(6)
   int? personalTarget;
+
+  @HiveField(7)
+  int colorIndex;
   
   Player({
     required this.id,
@@ -32,6 +35,7 @@ class Player extends HiveObject {
     this.isCompleted = false,
     this.turnCount = 0,
     this.personalTarget,
+    this.colorIndex = 0,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -48,6 +52,7 @@ class Player extends HiveObject {
     DateTime? createdAt,
     int? personalTarget,
     bool clearPersonalTarget = false,
+    int? colorIndex,
   }) {
     return Player(
       id: id ?? this.id,
@@ -57,6 +62,7 @@ class Player extends HiveObject {
       turnCount: turnCount ?? this.turnCount,
       createdAt: createdAt ?? this.createdAt,
       personalTarget: clearPersonalTarget ? null : (personalTarget ?? this.personalTarget),
+      colorIndex: colorIndex ?? this.colorIndex,
     );
   }
   

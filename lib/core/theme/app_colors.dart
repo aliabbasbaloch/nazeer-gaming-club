@@ -57,6 +57,23 @@ class AppColors {
   static const Color ballBlack = Color(0xFF1F2937);
   static const Color ballRed = Color(0xFFEF4444);
 
+  // ── Player colours ──────────────────────────────────────────────────────────
+
+  static const List<Color> playerColors = [
+    Color(0xFF0066FF),  // 0  electric blue
+    Color(0xFF00D4FF),  // 1  cyan
+    Color(0xFF00E676),  // 2  green
+    Color(0xFFFFB300),  // 3  amber
+    Color(0xFFFF5252),  // 4  red
+    Color(0xFFAA66FF),  // 5  purple
+    Color(0xFFFF66CC),  // 6  pink
+    Color(0xFFFF8C00),  // 7  orange
+    Color(0xFF26C6DA),  // 8  teal
+    Color(0xFF9CCC65),  // 9  lime
+    Color(0xFFEF9A9A),  // 10 rose
+    Color(0xFF80CBC4),  // 11 mint
+  ];
+
   // ── Gradients ──────────────────────────────────────────────────────────────
 
   static const LinearGradient primaryGradient = LinearGradient(

@@ -135,4 +135,11 @@ class DrawNotifier extends StateNotifier<DrawData> {
   void reset() {
     state = const DrawData();
   }
+
+  void reorderDrawnPlayers(int oldIndex, int newIndex) {
+    final list = List<String>.from(state.drawnNames);
+    final moved = list.removeAt(oldIndex);
+    list.insert(newIndex, moved);
+    state = state.copyWith(drawnNames: list);
+  }
 }

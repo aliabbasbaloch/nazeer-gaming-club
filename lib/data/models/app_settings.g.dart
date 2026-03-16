@@ -20,19 +20,28 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       isDarkMode: fields[0] as bool,
       defaultTargetScore: fields[1] as int,
       lastModified: fields[2] as DateTime?,
+      turnTimerEnabled: fields[3] == null ? true : fields[3] as bool,
+      keepScreenOn: fields[4] == null ? true : fields[4] as bool,
+      hapticEnabled: fields[5] == null ? true : fields[5] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.isDarkMode)
       ..writeByte(1)
       ..write(obj.defaultTargetScore)
       ..writeByte(2)
-      ..write(obj.lastModified);
+      ..write(obj.lastModified)
+      ..writeByte(3)
+      ..write(obj.turnTimerEnabled)
+      ..writeByte(4)
+      ..write(obj.keepScreenOn)
+      ..writeByte(5)
+      ..write(obj.hapticEnabled);
   }
 
   @override

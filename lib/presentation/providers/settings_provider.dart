@@ -35,6 +35,24 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     await _repository.saveSettings(newSettings);
     state = newSettings;
   }
+
+  Future<void> toggleTurnTimer() async {
+    final newSettings = state.copyWith(turnTimerEnabled: !state.turnTimerEnabled);
+    await _repository.saveSettings(newSettings);
+    state = newSettings;
+  }
+
+  Future<void> toggleKeepScreenOn() async {
+    final newSettings = state.copyWith(keepScreenOn: !state.keepScreenOn);
+    await _repository.saveSettings(newSettings);
+    state = newSettings;
+  }
+
+  Future<void> toggleHaptic() async {
+    final newSettings = state.copyWith(hapticEnabled: !state.hapticEnabled);
+    await _repository.saveSettings(newSettings);
+    state = newSettings;
+  }
 }
 
 /// Provider for storage repository
