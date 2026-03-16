@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/models/saved_player.dart';
+import '../../providers/saved_players_provider.dart';
 import '../../providers/settings_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -13,6 +17,35 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _showTargetSelector = false;
+
+  Future<void> _shareApk() async {
+    try {
+      const channel = MethodChannel('com.nazeer.snooker/apk');
+      final String apkPath = await channel.invokeMethod('getApkPath');
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(apkPath, mimeType: 'application/vnd.android.package-archive')],
+        text: 'Nazeer Gaming Club — Snooker Score Tracker\nby Ali Abbas',
+      ));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Share not available on this platform')),
+        );
+      }
+    }
+  }
+
+  void _showPlayerProfilesSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.of(context).bgCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const _PlayerProfilesSheet(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +117,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           .updateDefaultTargetScore(score),
                     ),
                   ),
+                const _Divider(),
+                _SettingsRow(
+                  icon: Icons.timer,
+                  title: 'Turn Timer (30s)',
+                  trailing: Switch(
+                    value: settings.turnTimerEnabled,
+                    onChanged: (_) =>
+                        ref.read(settingsProvider.notifier).toggleTurnTimer(),
+                    activeThumbColor: AppColors.primary,
+                  ),
+                  onTap: () =>
+                      ref.read(settingsProvider.notifier).toggleTurnTimer(),
+                ),
+                const _Divider(),
+                _SettingsRow(
+                  icon: Icons.screen_lock_portrait,
+                  title: 'Keep Screen On',
+                  trailing: Switch(
+                    value: settings.keepScreenOn,
+                    onChanged: (_) =>
+                        ref.read(settingsProvider.notifier).toggleKeepScreenOn(),
+                    activeThumbColor: AppColors.primary,
+                  ),
+                  onTap: () =>
+                      ref.read(settingsProvider.notifier).toggleKeepScreenOn(),
+                ),
+                const _Divider(),
+                _SettingsRow(
+                  icon: Icons.vibration,
+                  title: 'Haptic Feedback',
+                  trailing: Switch(
+                    value: settings.hapticEnabled,
+                    onChanged: (_) =>
+                        ref.read(settingsProvider.notifier).toggleHaptic(),
+                    activeThumbColor: AppColors.primary,
+                  ),
+                  onTap: () =>
+                      ref.read(settingsProvider.notifier).toggleHaptic(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // ── Players ───────────────────────────────────────────────────
+            const _SectionHeader(title: 'Players'),
+            _SettingsGroup(
+              children: [
+                _SettingsRow(
+                  icon: Icons.people,
+                  title: 'Player Profiles',
+                  subtitle: 'Manage saved players',
+                  trailing: Icon(Icons.chevron_right,
+                      color: colors.textSecondary, size: 20),
+                  onTap: () => _showPlayerProfilesSheet(context),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -98,6 +186,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   trailing: Icon(Icons.chevron_right,
                       color: colors.textSecondary, size: 20),
                   onTap: () => _showAboutAppDialog(context),
+                ),
+                const _Divider(),
+                _SettingsRow(
+                  icon: Icons.share,
+                  title: 'Share App',
+                  subtitle: 'Share APK file with friends',
+                  trailing: Icon(Icons.chevron_right,
+                      color: colors.textSecondary, size: 20),
+                  onTap: _shareApk,
                 ),
                 const _Divider(),
                 _SettingsRow(
