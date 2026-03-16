@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/history_action.dart';
+import '../../../data/models/player.dart';
+import '../../providers/game_provider.dart';
 import '../../providers/history_provider.dart';
 import '../../providers/settings_provider.dart';
+
+// ---------------------------------------------------------------------------
+// Filter provider — null = All, non-null = playerId
+// ---------------------------------------------------------------------------
+
+final historyFilterProvider = StateProvider<String?>((ref) => null);
 
 // ---------------------------------------------------------------------------
 
@@ -44,13 +52,28 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   Widget build(BuildContext context) {
     final history = ref.watch(historyProvider);
     final colors = ref.watch(appColorsProvider);
+    final selectedPlayerId = ref.watch(historyFilterProvider);
+    final game = ref.watch(gameProvider);
 
-    // getAllHistory() already returns entries sorted newest-first by timestamp.
     final scoreEntries = history
         .where((a) =>
             a.actionType == ActionType.score ||
             a.actionType == ActionType.subtract)
         .toList();
+
+    final players = game?.players ?? <Player>[];
+
+    // Filtered entries
+    final filtered = selectedPlayerId == null
+        ? scoreEntries
+        : scoreEntries
+            .where((a) => a.playerId == selectedPlayerId)
+            .toList();
+
+    // Find selected player
+    final selectedPlayer = selectedPlayerId == null
+        ? null
+        : players.where((p) => p.id == selectedPlayerId).firstOrNull;
 
     return Scaffold(
       backgroundColor: colors.bgPage,
@@ -73,13 +96,237 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       body: SafeArea(
         child: scoreEntries.isEmpty
             ? const _EmptyState()
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                itemCount: scoreEntries.length,
-                itemBuilder: (context, index) => _HistoryRow(
-                  action: scoreEntries[index],
+            : Column(
+                children: [
+                  if (players.isNotEmpty)
+                    _FilterBar(players: players),
+                  if (selectedPlayer != null && game != null)
+                    _PlayerHeaderCard(
+                      player: selectedPlayer,
+                      targetScore: game.targetScore,
+                    ),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? const _EmptyState()
+                        : ListView.builder(
+                            padding:
+                                const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) => _HistoryRow(
+                              action: filtered[index],
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Filter Bar
+// ---------------------------------------------------------------------------
+
+class _FilterBar extends ConsumerWidget {
+  final List<Player> players;
+  const _FilterBar({required this.players});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
+    final selected = ref.watch(historyFilterProvider);
+
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        children: [
+          _FilterChip(
+            label: 'All',
+            isSelected: selected == null,
+            onTap: () => ref.read(historyFilterProvider.notifier).state = null,
+            colors: colors,
+          ),
+          const SizedBox(width: 6),
+          ...players.map((p) => Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: _FilterChip(
+                  label: p.name,
+                  isSelected: selected == p.id,
+                  onTap: () =>
+                      ref.read(historyFilterProvider.notifier).state = p.id,
+                  colors: colors,
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final AppColors colors;
+
+  const _FilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : colors.bgElevated,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : colors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : colors.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Player Header Card
+// ---------------------------------------------------------------------------
+
+class _PlayerHeaderCard extends StatelessWidget {
+  final Player player;
+  final int targetScore;
+
+  const _PlayerHeaderCard({
+    required this.player,
+    required this.targetScore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final effective = player.effectiveTarget(targetScore);
+    final progress = (player.score / effective).clamp(0.0, 1.0);
+    final isCompleted = player.isCompleted;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isCompleted
+              ? AppColors.warning.withValues(alpha: 0.4)
+              : AppColors.primary.withValues(alpha: 0.3),
+        ),
+        boxShadow: colors.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.playerColors[player.colorIndex % 12]
+                      .withValues(alpha: 0.2),
+                  border: Border.all(
+                    color: AppColors.playerColors[player.colorIndex % 12],
+                    width: 2,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  player.name[0].toUpperCase(),
+                  style: TextStyle(
+                    color: AppColors.playerColors[player.colorIndex % 12],
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
                 ),
               ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      player.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '${player.score} / $effective pts',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? AppColors.warning.withValues(alpha: 0.15)
+                      : AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isCompleted
+                        ? AppColors.warning.withValues(alpha: 0.4)
+                        : AppColors.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  isCompleted ? '🏆 Done' : '▶ Playing',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isCompleted ? AppColors.warning : AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: colors.bgElevated,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isCompleted ? AppColors.warning : AppColors.primary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

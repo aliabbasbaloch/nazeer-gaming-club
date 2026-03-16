@@ -80,6 +80,7 @@ class GameNotifier extends StateNotifier<Game?> {
     final newPlayer = Player(
       id: _uuid.v4(),
       name: playerName.trim(),
+      colorIndex: currentGame.players.length % 12,
     );
     
     final updatedPlayers = [...currentGame.players, newPlayer];
@@ -427,5 +428,46 @@ class GameNotifier extends StateNotifier<Game?> {
         targetPlayer.isCompleted) {
       await nextPlayer();
     }
+  }
+
+  Future<void> rematch() async {
+    if (state == null) return;
+    await _repository.clearHistoryForGame(state!.id);
+    final resetPlayers = state!.players.map((p) => p.copyWith(
+      score: 0,
+      isCompleted: false,
+      turnCount: 0,
+    )).toList();
+    final newGame = state!.copyWith(
+      id: _uuid.v4(),
+      players: resetPlayers,
+      currentPlayerId: resetPlayers.first.id,
+      isActive: true,
+    );
+    await _repository.saveGame(newGame);
+    _undoStack.clear();
+    state = newGame;
+  }
+
+  Future<void> setPlayerColor(String playerId, int colorIndex) async {
+    if (state == null) return;
+    final updatedPlayers = state!.players.map((p) =>
+      p.id == playerId ? p.copyWith(colorIndex: colorIndex) : p
+    ).toList();
+    final updatedGame = state!.copyWith(players: updatedPlayers);
+    await _repository.saveGame(updatedGame);
+    state = updatedGame;
+  }
+
+  Future<void> reorderPlayers(int oldIndex, int newIndex) async {
+    if (state == null) return;
+    _undoStack.add(state!.copyWith());
+    if (_undoStack.length > 20) _undoStack.removeAt(0);
+    final players = List<Player>.from(state!.players);
+    final moved = players.removeAt(oldIndex);
+    players.insert(newIndex, moved);
+    final updated = state!.copyWith(players: players);
+    await _repository.saveGame(updated);
+    state = updated;
   }
 }

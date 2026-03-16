@@ -1,53 +1,44 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'player.dart';
+part of 'saved_player.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class PlayerAdapter extends TypeAdapter<Player> {
+class SavedPlayerAdapter extends TypeAdapter<SavedPlayer> {
   @override
-  final int typeId = 0;
+  final int typeId = 5;
 
   @override
-  Player read(BinaryReader reader) {
+  SavedPlayer read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Player(
+    return SavedPlayer(
       id: fields[0] as String,
       name: fields[1] as String,
-      score: fields[2] as int,
-      isCompleted: fields[3] as bool,
-      turnCount: fields[4] as int,
-      createdAt: fields[5] as DateTime?,
-      personalTarget: fields[6] as int?,
-      colorIndex: fields[7] == null ? 0 : fields[7] as int,
+      colorIndex: fields[2] as int,
+      usageCount: fields[3] == null ? 0 : fields[3] as int,
+      lastUsed: fields[4] as DateTime?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Player obj) {
+  void write(BinaryWriter writer, SavedPlayer obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.name)
       ..writeByte(2)
-      ..write(obj.score)
+      ..write(obj.colorIndex)
       ..writeByte(3)
-      ..write(obj.isCompleted)
+      ..write(obj.usageCount)
       ..writeByte(4)
-      ..write(obj.turnCount)
-      ..writeByte(5)
-      ..write(obj.createdAt)
-      ..writeByte(6)
-      ..write(obj.personalTarget)
-      ..writeByte(7)
-      ..write(obj.colorIndex);
+      ..write(obj.lastUsed);
   }
 
   @override
@@ -56,7 +47,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PlayerAdapter &&
+      other is SavedPlayerAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

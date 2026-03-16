@@ -3,12 +3,14 @@ import '../models/player.dart';
 import '../models/game.dart';
 import '../models/history_action.dart';
 import '../models/app_settings.dart';
+import '../models/saved_player.dart';
 
 /// Repository for managing local storage operations
 class StorageRepository {
   Box<Game>? _gamesBox;
   Box<HistoryAction>? _historyBox;
   Box<AppSettings>? _settingsBox;
+  Box<SavedPlayer>? _savedPlayersBox;
   
   /// Initialize Hive and open boxes
   Future<void> init() async {
@@ -30,11 +32,15 @@ class StorageRepository {
     if (!Hive.isAdapterRegistered(4)) {
       Hive.registerAdapter(AppSettingsAdapter());
     }
+    if (!Hive.isAdapterRegistered(5)) {
+      Hive.registerAdapter(SavedPlayerAdapter());
+    }
     
     // Open boxes
     _gamesBox = await Hive.openBox<Game>('games');
     _historyBox = await Hive.openBox<HistoryAction>('history');
     _settingsBox = await Hive.openBox<AppSettings>('settings');
+    _savedPlayersBox = await Hive.openBox<SavedPlayer>('savedPlayers');
   }
   
   // ========== Game Operations ==========
@@ -81,8 +87,6 @@ class StorageRepository {
   
   List<HistoryAction> getAllHistory() {
     final all = _historyBox?.values.toList() ?? [];
-    // Sort newest-first by timestamp so history is always chronologically correct
-    // regardless of Hive insertion order or app-restart edge cases.
     all.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return all;
   }
@@ -91,21 +95,25 @@ class StorageRepository {
     await _historyBox?.clear();
   }
 
+  Future<void> clearHistoryForGame(String gameId) async {
+    if (_historyBox == null) return;
+    final idsToDelete = _historyBox!.values
+        .where((h) => h.gameId == gameId)
+        .map((h) => h.id)
+        .toList();
+    for (final id in idsToDelete) {
+      await _historyBox!.delete(id);
+    }
+  }
+
   Future<void> removeLastHistoryAction(String gameId) async {
     if (_historyBox == null) return;
     final entries = _historyBox!.values
         .where((a) => a.gameId == gameId)
         .toList();
     if (entries.isEmpty) return;
-    // Find the most recent entry
     entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    final last = entries.first;
-    // Find its key and delete
-    final key = _historyBox!.keys.firstWhere(
-      (k) => _historyBox!.get(k)?.id == last.id,
-      orElse: () => null,
-    );
-    if (key != null) await _historyBox!.delete(key);
+    await _historyBox!.delete(entries.first.id);
   }
   
   List<HistoryAction> getFilteredHistory({
@@ -154,6 +162,26 @@ class StorageRepository {
     final settings = getSettings();
     await saveSettings(settings.copyWith(defaultTargetScore: targetScore));
   }
+
+  // ========== SavedPlayer Operations ==========
+
+  List<SavedPlayer> getSavedPlayers() {
+    final all = _savedPlayersBox?.values.toList() ?? [];
+    all.sort((a, b) => b.lastUsed.compareTo(a.lastUsed));
+    return all;
+  }
+
+  Future<void> saveSavedPlayer(SavedPlayer player) async {
+    await _savedPlayersBox?.put(player.id, player);
+  }
+
+  Future<void> deleteSavedPlayer(String id) async {
+    await _savedPlayersBox?.delete(id);
+  }
+
+  Future<void> clearSavedPlayers() async {
+    await _savedPlayersBox?.clear();
+  }
   
   // ========== Cleanup ==========
   
@@ -161,5 +189,6 @@ class StorageRepository {
     await _gamesBox?.close();
     await _historyBox?.close();
     await _settingsBox?.close();
+    await _savedPlayersBox?.close();
   }
 }
